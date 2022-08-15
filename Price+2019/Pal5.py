@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import import pylab as plt
+import pylab as plt
 import scipy
 import seaborn as sns
 sns.set(style="ticks", context="poster")

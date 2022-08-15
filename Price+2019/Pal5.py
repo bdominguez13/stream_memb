@@ -19,7 +19,7 @@ from sklearn.mixture import GaussianMixture
 from scipy.optimize import curve_fit
 
 from scipy.stats import multivariate_normal
-from scipy.stats import normt
+from scipy.stats import norm
 
 import os #Avoids issues with paralellization in emcee
 os.environ["OMP_NUM_THREADS"] = "1"

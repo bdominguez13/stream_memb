@@ -412,10 +412,11 @@ with Pool() as pool:
     sampler.run_mcmc(pos, steps, progress=True);
     end = time.time()
     multi_time = end-start 
-   # print('time MCMC: ',multi_time)#,serial_time/multi_time)
+    print('time MCMC: ',multi_time)#,serial_time/multi_time)
     print('time MCMC: ',multi_time, file=out)
 
 tau = sampler.get_autocorr_time()
+print('tau: ', tau)
 print('tau: ', tau, file=out)
 
 

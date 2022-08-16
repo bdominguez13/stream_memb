@@ -201,8 +201,8 @@ def compute_GaussianMixture(N, covariance_type='full', max_iter=1000):
         print("best fit converged:", models[i].converged_)
     return models
 
-N = np.arange(3,13) #Con 1 gaussiana da error
-# N = np.arange(6,7)
+#N = np.arange(3,13) #Con 1 gaussiana da error
+N = np.arange(6,7)
 models = compute_XDGMM(N)
 models_gmm = compute_GaussianMixture(N)
 
@@ -221,7 +221,7 @@ xdgmm_best = models[i_best]
 gmm_best = models_gmm[i_best] #Me quedo con el mejor modelo de gmm segun xd
 
 fig4=plt.figure(4,figsize=(8,6))
-fig4.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.07,left=0.07,right=0.95)
+fig4.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.14,left=0.19,right=0.97)
 ax4=fig4.add_subplot(111)
 ax4.plot(N, np.array(BIC)/X.shape[0], '--k', marker='o', lw=2, ms=6, label='BIC$_{xd}$/N')
 #ax4.plot(N, np.array(BIC_gmm)/X.shape[0], '--', c='red', marker='o', lw=2, ms=6, label='BIC$_{gmm}$/N')
@@ -241,8 +241,8 @@ np.save('p_bgn.npy', p_bgn)
 sample = gmm_best.sample(ra_out.size)
 
 fig5=plt.figure(5,figsize=(10,10))
-fig5.subplots_adjust(wspace=0.35,hspace=0.34,top=0.95,bottom=0.07,left=0.07,right=0.95)
-ax=fig5.add_subplot(221)
+fig5.subplots_adjust(wspace=0.4,hspace=0.3,top=0.98,bottom=0.11,left=0.14,right=0.97)
+ax5=fig5.add_subplot(221)
 ax5.scatter(pmra_out, pmdec_out, s=1, label='Obs')
 ax5.scatter(sample[0][:,0], sample[0][:,1], s=1, label='GMM')
 # ax5.legend()
@@ -269,10 +269,13 @@ ax5.set_ylabel('$d$ (kpc)')
 # ax5.set_ylim([-5,1])
 
 ax5=fig5.add_subplot(224)
-ax5.hist(d_out,bins=70)
-ax5.hist(sample[0][:,2],bins=70)
+ax5.hist(d_out,bins=70, alpha=70)
+ax5.hist(sample[0][:,2],bins=70, alpha=70)
 ax5.set_xlim(0,40.)
 ax5.set_xlabel('$d$ (kpc)');
+
+fig5.savefig('bg_sample.png')
+
 
 
 ##Defino probabilidades
@@ -405,6 +408,13 @@ pos = init*np.ones((nwalkers,ndim)) + init*1e-1*np.random.randn(nwalkers, 13) #1
 #serial_time = end-start
 #print(serial_time)
 
+from multiprocessing import cpu_count
+
+ncpu = cpu_count()
+print("{0} CPUs".format(ncpu))
+print("{0} CPUs".format(ncpu), file=out)
+
+
 #NCPU RUN
 with Pool() as pool:
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn), pool=pool)
@@ -417,7 +427,7 @@ with Pool() as pool:
 
 tau = sampler.get_autocorr_time()
 print('tau: ', tau)
-print('tau: ', tau, file=out)
+print('tau promedio: ', np.mean(tau), file=out)
 
 
 flat_samples = sampler.get_chain(discard=2**10, thin=2200, flat=True)
@@ -426,7 +436,9 @@ flat_samples = sampler.get_chain(discard=2**10, thin=2200, flat=True)
 columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
 
-fig6 = corner.corner(flat_samples, labels=columns)
+fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.15)
+fig6.subplots_adjust(bottom=0.05,left=0.05)
+
 fig6.savefig('corner_plot.png')
 
 ##Guardo las posteriors

@@ -185,7 +185,7 @@ diag = np.arange(X.shape[-1])
 Xerr[:, diag, diag] = np.vstack([e_pmra_out**2, e_pmdec_out**2, e_d_out**2]).T
 
 #Busco mejor numero de gaussianas
-def compute_XDGMM(N, max_iter=1000):
+def compute_XDGMM(N, max_iter=100):
     models = [None for n in N]
     for i in range(len(N)):
         print("N =", N[i])

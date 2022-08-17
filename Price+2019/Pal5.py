@@ -269,8 +269,8 @@ ax5.set_ylabel('$d$ (kpc)')
 # ax5.set_ylim([-5,1])
 
 ax5=fig5.add_subplot(224)
-ax5.hist(d_out,bins=70, alpha=70)
-ax5.hist(sample[0][:,2],bins=70, alpha=70)
+ax5.hist(d_out,bins=70, alpha=0.7)
+ax5.hist(sample[0][:,2],bins=70, alpha=0.7)
 ax5.set_xlim(0,40.)
 ax5.set_xlabel('$d$ (kpc)');
 

@@ -1,3 +1,4 @@
+from parametros import *
 import numpy as np
 import pandas as pd
 import pylab as plt
@@ -25,7 +26,7 @@ import os #Avoids issues with paralellization in emcee
 os.environ["OMP_NUM_THREADS"] = "1"
 from multiprocessing import Pool
 from multiprocessing import cpu_count
-import time
+import datetime, time
 import emcee
 import corner	
 
@@ -35,7 +36,7 @@ print('Cargando datos \n', file=log)
 log.close()
 
 ##Cargo datos
-f = fits.open('RRLwithprobthin.fit')
+f = fits.open(tabla)
 data = f[1].data
 # data.columns
 
@@ -45,7 +46,6 @@ print('Cargando track y transformando coordenadas \n', file=log)
 log.close()
 
 ##Cargo track y transformo coordenadas
-st = "Pal5-PW19"
 mwsts = galstreams.MWStreams(verbose=False, implement_Off=False)
 track = mwsts[st].track
 st_track = track.transform_to(gc.Pal5PriceWhelan18())
@@ -58,12 +58,12 @@ pmphi2_t = st_track.pm_phi2
 _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
 
 c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr)
-pal = c.transform_to(gc.Pal5PriceWhelan18())
+st_coord= c.transform_to(gc.Pal5PriceWhelan18())
 
-phi1 = pal.phi1 #deg
-phi2 = pal.phi2 #deg
-pmphi1 = pal.pm_phi1_cosphi2 #mas/yr
-pmphi2 = pal.pm_phi2 #mas/yr
+phi1 = st_coord.phi1 #deg
+phi2 = st_coord.phi2 #deg
+pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
+pmphi2 = st_coord.pm_phi2 #mas/yr
 d = data['Dist'] #kpc
 
 
@@ -188,7 +188,6 @@ e_d_out = d_out*0.03
 
 
 ##Extreme deconvolution en pm y d
-do_bg_model = 'yes'
 
 if do_bg_model == 'yes':
     
@@ -222,7 +221,7 @@ if do_bg_model == 'yes':
         return models
 
     #N = np.arange(3,13) #Con 1 gaussiana da error
-    N = np.arange(6,7)
+    #N = np.arange(6,7)
     models = compute_XDGMM(N)
     models_gmm = compute_GaussianMixture(N)
 
@@ -310,7 +309,7 @@ log.close()
 
 #Defino vector de valores y matriz de covarianza del stream
 y = np.array([pmphi1.value, pmphi2.value, d])
-C = np.array([[0.05**2, 0., 0.], [0., 0.05**2, 0.], [0., 0., 0.2**2]]) #mas/yr, mas/yr, kpc
+#C = np.array([[0.05**2, 0., 0.], [0., 0.05**2, 0.], [0., 0., 0.2**2]]) #mas/yr, mas/yr, kpc
 
 #Defino log-likelihood del stream
 
@@ -339,12 +338,12 @@ def log_unif(p, lim_inf, lim_sup):
     return -np.inf
 
 
-d_mean, e_dd = 23.6, 0.8
-mm = np.abs(phi1_t.value)<0.1 #Puntos del track con phi1 alrederor de 0
-mu = np.array([np.mean(pmphi1_t.value[mm]), np.mean(pmphi2_t.value[mm])]) #Valores medios de mu1 y mu2 alrededor de phi1=0
-e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
-cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
+#d_mean, e_dd = 23.6, 0.8
+#mm = np.abs(phi1_t.value)<0.1 #Puntos del track con phi1 alrederor de 0
+#mu = np.array([np.mean(pmphi1_t.value[mm]), np.mean(pmphi2_t.value[mm])]) #Valores medios de mu1 y mu2 alrededor de phi1=0
+#e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
+#cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
+#sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
 
 
 #print('VAPs: ',np.linalg.eig(sigma)[0])
@@ -352,58 +351,58 @@ log = open('log.txt', 'a+')
 print('VAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]), file=log)
 log.close()
 
-def log_prior(theta):
+def log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
     
-    d_mean, e_dd = 23.6, 0.8
-    mu = np.array([3.78307899, 0.71613004])
-    e_mu1, e_mu2, rho_m = 0.022, 0.025, -0.39
-    cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-    sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
+    #d_mean, e_dd = 23.6, 0.8
+    #mu = np.array([3.78307899, 0.71613004])
+    #e_mu1, e_mu2, rho_m = 0.022, 0.025, -0.39
+    #cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
+    #sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
     
     p_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
     p_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)
     
-    p_b1 = log_unif(b_mu1, -100, 100)
-    p_b2 = log_unif(b_mu2, -100, 100)
-    p_bd = log_unif(b_d, -100, 100)
+    p_b1 = log_unif(b_mu1, lim_unif[0], lim_unif[1])
+    p_b2 = log_unif(b_mu2, lim_unif[2], lim_unif[3])
+    p_bd = log_unif(b_d, lim_unif[4], lim_unif[5])
     
-    p_c1 = log_unif(c_mu1, -100, 100)
-    p_c2 = log_unif(c_mu2, -100, 100)
-    p_cd = log_unif(c_d, -100, 100)
+    p_c1 = log_unif(c_mu1, lim_unif[6], lim_unif[7])
+    p_c2 = log_unif(c_mu2, lim_unif[8], lim_unif[9])
+    p_cd = log_unif(c_d, lim_unif[10], lim_unif[11])
     
-    p_x1 = log_unif(x_mu1, -20, 15)
-    p_x2 = log_unif(x_mu2, -20, 15)
-    p_xd = log_unif(x_d, -20, 15)
+    p_x1 = log_unif(x_mu1, lim_unif[12], lim_unif[13])
+    p_x2 = log_unif(x_mu2, lim_unif[14], lim_unif[15])
+    p_xd = log_unif(x_d, lim_unif[16], lim_unif[17])
                     
-    p_f = log_unif(f, 0, 1)
+    p_f = log_unif(f, lim_unif[18], lim_unif[19])
                     
     return p_a12 + p_ad + p_b1 + p_b2 + p_bd + p_c1 + p_c2 + p_cd + p_x1 + p_x2 + p_xd + p_f
 
 
-def prior_sample(mu, sigma, d_mean, e_dd, n):
+def prior_sample(mu, sigma, d_mean, e_dd, lim_unif, n):
     a_mu1, a_mu2 = np.random.multivariate_normal(mu, sigma, n).T
     a_d = np.random.normal(d_mean, e_dd, n)
     
-    b_mu1 = np.random.uniform(-100, 100, n).T
-    b_mu2 = np.random.uniform(-100, 100, n).T
-    b_d = np.random.uniform(-100, 100, n).T
+    b_mu1 = np.random.uniform(lim_unif[0], lim_unif[1], n).T
+    b_mu2 = np.random.uniform(lim_unif[2], lim_unif[3], n).T
+    b_d = np.random.uniform(lim_unif[4], lim_unif[5], n).T
     
-    c_mu1 = np.random.uniform(-100, 100, n).T
-    c_mu2 = np.random.uniform(-100, 100, n).T
-    c_d = np.random.uniform(-100, 100, n).T
+    c_mu1 = np.random.uniform(lim_unif[6], lim_unif[7], n).T
+    c_mu2 = np.random.uniform(lim_unif[8], lim_unif[9], n).T
+    c_d = np.random.uniform(lim_unif[10], lim_unif[11], n).T
     
-    x_mu1 = np.random.uniform(-20, 15, n).T
-    x_mu2 = np.random.uniform(-20, 15, n).T
-    x_d = np.random.uniform(-20, 15, n).T
+    x_mu1 = np.random.uniform(lim_unif[12], lim_unif[13], n).T
+    x_mu2 = np.random.uniform(lim_unif[14], lim_unif[15], n).T
+    x_d = np.random.uniform(lim_unif[16], lim_unif[17], n).T
 
-    f = np.random.uniform(0, 1, n).T
+    f = np.random.uniform(lim_unif[18], lim_unif[19], n).T
 
     return np.stack((a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f), axis=-1)
 
 #Defino posterior
-def log_posterior(theta, phi1, y, C, p_bgn):
-    lp = log_prior(theta)
+def log_posterior(theta, phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif):
+    lp = log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif)
     if not np.isfinite(lp):
         return -np.inf
     return lp + log_likelihood(theta, phi1, y, C, p_bgn)
@@ -414,11 +413,9 @@ print('MCMC', file=log)
 log.close()
 
 ##MCMC
-nwalkers, ndim, steps = 104, 13, 2**8
-discard, thin = 10, 1
 
 #Forma1
-#pos = prior_sample(mu, sigma, d_mean, e_dd, nwalkers) + 1e-4*np.random.randn(nwalkers, 13) #13 parametros iniciales
+#pos = prior_sample(mu, sigma, d_mean, e_dd, lim_unif, nwalkers) + 1e-4*np.random.randn(nwalkers, 13) #13 parametros iniciales
 
 #Forma2
 def model(phi1, a, b, c, x):
@@ -436,7 +433,7 @@ pos = init*np.ones((nwalkers,ndim)) + init*1e-1*np.random.randn(nwalkers, 13) #1
 
 
 #SERIAL RUN
-#sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn))
+#sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif))
 #start = time.time()
 #sampler.run_mcmc(pos, steps, progress=True);
 #end = time.time()
@@ -451,19 +448,19 @@ log.close()
 
 #NCPU RUN
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn), pool=pool)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif), pool=pool)
     start = time.time()
     sampler.run_mcmc(pos, steps, progress=True);
     end = time.time()
     multi_time = end-start 
-    print('Tiempo MCMC: ',multi_time)#,serial_time/multi_time)
+    print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
     log = open('log.txt', 'a+')
-    print('Tiempo MCMC: {0:.3f}'.format(multi_time), file=log)
+    print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs', file=log)
     log.close()
 
-tau = sampler.get_autocorr_time()
-print('tau: ', tau)
-print('tau promedio: {}'.format(np.mean(tau)), file=log)
+#tau = sampler.get_autocorr_time()
+#print('tau: ', tau)
+#print('tau promedio: {}'.format(np.mean(tau)), file=log)
 
 flat_samples = sampler.get_chain(discard=discard, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
@@ -490,7 +487,7 @@ post = [None for n in range(len(flat_samples))]
 
 for i in range(len(flat_samples)):
     theta = flat_samples[i]
-    post[i] = log_posterior(theta, phi1, y, C, p_bgn)
+    post[i] = log_posterior(theta, phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif)
     if i%1000==0:
         print('n =', i)
         log = open('log.txt', 'a+')
@@ -524,7 +521,7 @@ theta_5 = flat_samples[i_5]
 theta_95 = flat_samples[i_95]
 
 log = open('log.txt', 'a+')
-print('Guardando resultados \n', file=log)
+print('\n Guardando resultados \n', file=log)
 log.close()
 
 theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])

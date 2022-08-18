@@ -24,6 +24,7 @@ from scipy.stats import norm
 import os #Avoids issues with paralellization in emcee
 os.environ["OMP_NUM_THREADS"] = "1"
 from multiprocessing import Pool
+from multiprocessing import cpu_count
 import time
 import emcee
 import corner	
@@ -440,8 +441,6 @@ pos = init*np.ones((nwalkers,ndim)) + init*1e-1*np.random.randn(nwalkers, 13) #1
 #end = time.time()
 #serial_time = end-start
 #print(serial_time)
-
-from multiprocessing import cpu_count
 
 ncpu = cpu_count()
 print("{0} CPUs".format(ncpu))

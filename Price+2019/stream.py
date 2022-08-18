@@ -458,9 +458,9 @@ with Pool() as pool:
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs', file=log)
     log.close()
 
-#tau = sampler.get_autocorr_time()
-#print('tau: ', tau)
-#print('tau promedio: {}'.format(np.mean(tau)), file=log)
+tau = sampler.get_autocorr_time()
+print('tau: ', tau)
+print('tau promedio: {}'.format(np.mean(tau)), file=log)
 
 flat_samples = sampler.get_chain(discard=discard, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
@@ -521,7 +521,7 @@ theta_5 = flat_samples[i_5]
 theta_95 = flat_samples[i_95]
 
 log = open('log.txt', 'a+')
-print('\n Guardando resultados \n', file=log)
+print('\nGuardando resultados \n', file=log)
 log.close()
 
 theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])

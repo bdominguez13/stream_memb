@@ -27,7 +27,6 @@ os.environ["OMP_NUM_THREADS"] = "1"
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 import datetime, time
-from datetime import datetime
 import emcee
 import corner	
 
@@ -35,7 +34,7 @@ import corner
 nohup = open('nohup.out', 'w+')
 nohup.close()
 
-Start = datetime.now()
+Start = datetime.datetime.now()
 print('Inicio: ', Start, '\n')
 
 print('Cargando datos \n')
@@ -519,5 +518,5 @@ Memb = pd.DataFrame({'ID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb%': m
 Memb.to_csv('memb_prob.csv', index=False)
 
 
-End = datetime.now()
+End = datetime.datetime.now()
 print('Final: ', End, '\n')

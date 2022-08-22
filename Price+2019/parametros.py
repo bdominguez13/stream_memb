@@ -19,7 +19,7 @@ sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)
 lim_unif = np.array([-100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -20, 15, -20, 15, -20, 15, 0, 1])
 
 #MCMC
-nwalkers, ndim, steps = 104, 13, 2**17
-discard, thin = 2**10, 2200
+nwalkers, ndim, steps = 104, 13, 2**14
+discard, thin = 2**10, 275
 
 

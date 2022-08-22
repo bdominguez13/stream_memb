@@ -30,9 +30,9 @@ import emcee
 import corner	
 
 
-log = open('log.txt', 'w+')
-print('Cargando datos \n', file=log)
-log.close()
+nohup = open('nohup.out', 'w+')
+nohup.close()
+print('Cargando datos \n')
 
 ##Cargo datos
 f = fits.open('RRLwithprobthin.fit')
@@ -40,9 +40,7 @@ data = f[1].data
 # data.columns
 
 
-log = open('log.txt', 'a+')
-print('Cargando track y transformando coordenadas \n', file=log)
-log.close()
+print('Cargando track y transformando coordenadas \n')
 
 ##Cargo track y transformo coordenadas
 st = "Pal5-PW19"
@@ -192,9 +190,7 @@ do_bg_model = 'yes'
 
 if do_bg_model == 'yes':
     
-    log = open('log.txt', 'a+')
-    print('Calculando modelo de fondo y BIC', file=log)
-    log.close()
+    print('Calculando modelo de fondo y BIC')
 
     X = np.vstack([pmra_out, pmdec_out, d_out]).T
     Xerr = np.zeros(X.shape + X.shape[-1:])
@@ -206,9 +202,6 @@ if do_bg_model == 'yes':
         models = [None for n in N]
         for i in range(len(N)):
             print("N =", N[i])
-            log = open('log.txt', 'a+')
-            print("N = {0}".format(N[i]), file=log)
-            log.close()
             models[i] = XDGMM(n_components=N[i], max_iter=max_iter)
             models[i].fit(X, Xerr)
         return models
@@ -296,15 +289,11 @@ if do_bg_model == 'yes':
     fig5.savefig('bg_sample.png')
 
 else:
-    log = open('log.txt', 'a+')
-    print('Cargo p_bgn \n', file=log)
-    log.close()
+    print('Cargo p_bgn \n')
     p_bgn = np.load('p_bgn.npy')
 
 
-log = open('log.txt', 'a+')
-print('Definiendo probabilidades', file=log)
-log.close()
+print('Definiendo probabilidades')
 
 ##Defino probabilidades
 
@@ -348,9 +337,7 @@ sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)
 
 
 #print('VAPs: ',np.linalg.eig(sigma)[0])
-log = open('log.txt', 'a+')
-print('VAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]), file=log)
-log.close()
+print('VAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]))
 
 def log_prior(theta):
     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
@@ -409,9 +396,7 @@ def log_posterior(theta, phi1, y, C, p_bgn):
     return lp + log_likelihood(theta, phi1, y, C, p_bgn)
 
 
-log = open('log.txt', 'a+')
-print('MCMC', file=log)
-log.close()
+print('MCMC')
 
 ##MCMC
 nwalkers, ndim, steps = 104, 13, 2**8
@@ -445,9 +430,6 @@ pos = init*np.ones((nwalkers,ndim)) + init*1e-1*np.random.randn(nwalkers, 13) #1
 
 ncpu = cpu_count()
 print("{0} CPUs".format(ncpu))
-log = open('log.txt', 'a+')
-print("{0} CPUs".format(ncpu), file=log)
-log.close()
 
 #NCPU RUN
 with Pool() as pool:
@@ -457,19 +439,13 @@ with Pool() as pool:
     end = time.time()
     multi_time = end-start 
     print('Tiempo MCMC: ',multi_time)#,serial_time/multi_time)
-    log = open('log.txt', 'a+')
-    print('Tiempo MCMC: {0:.3f}'.format(multi_time), file=log)
-    log.close()
 
 tau = sampler.get_autocorr_time()
 print('tau: ', tau)
-print('tau promedio: {}'.format(np.mean(tau)), file=log)
+print('tau promedio: {}'.format(np.mean(tau)))
 
 flat_samples = sampler.get_chain(discard=discard, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
-log = open('log.txt', 'a+')
-print('Tamano muestra: {} \n'.format(flat_samples.shape), file=log)
-log.close()
 
 columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
@@ -481,9 +457,7 @@ fig6.savefig('corner_plot.png')
 
 
 
-log = open('log.txt', 'a+')
-print('Guardando muestras y posteriors \n', file=log)
-log.close()
+print('Guardando muestras y posteriors \n')
 
 ##Guardo las posteriors
 post = [None for n in range(len(flat_samples))]
@@ -493,9 +467,6 @@ for i in range(len(flat_samples)):
     post[i] = log_posterior(theta, phi1, y, C, p_bgn)
     if i%1000==0:
         print('n =', i)
-        log = open('log.txt', 'a+')
-        print('n =', i, file=log)
-        log.close()
 
 
 theta_post['Posterior'] = post
@@ -523,9 +494,7 @@ i_95 = abs(post-p5).argmin()
 theta_5 = flat_samples[i_5]
 theta_95 = flat_samples[i_95]
 
-log = open('log.txt', 'a+')
-print('Guardando resultados \n', file=log)
-log.close()
+print('Guardando resultados \n')
 
 theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
 theta_resul.loc[0] = theta_max
@@ -536,9 +505,7 @@ theta_resul.index = ['MAP','median','5th','95th']
 theta_resul.to_csv('theta_resul.csv', index=False)
 
 
-log = open('log.txt', 'a+')
-print('Guardando membresias \n', file=log)
-log.close()
+print('Guardando membresias \n')
 
 ##Prob de membresia al stream
 theta_st = theta_max[0:12]

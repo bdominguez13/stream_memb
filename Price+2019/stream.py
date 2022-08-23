@@ -100,6 +100,7 @@ ax.set_ylim([-5,1]);
 
 fig2=plt.figure(2,figsize=(12,8))
 fig2.subplots_adjust(wspace=0.3,hspace=0.34,top=0.95,bottom=0.12,left=0.11,right=0.98)
+ax2=fig2.add_subplot(221)
 ax2.plot(phi1[inside],phi2[inside],'.',ms=5)
 ax2.plot(phi1[out],phi2[out],'.',ms=2.5)
 ax2.plot(phi1_t,phi2_t,'k.',ms=1.)
@@ -142,6 +143,7 @@ ax2.set_ylim([-2.5,2.5]);
 # st = "Pal5-PW19"
 fig3=plt.figure(3,figsize=(8,6))
 fig3.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.16,left=0.17,right=0.95)
+ax3=fig3.add_subplot(111)
 ax3.plot(data[inside]['RA_ICRS'],data[inside]['DE_ICRS'],'.',ms=5)
 ax3.plot(data[out]['RA_ICRS'],data[out]['DE_ICRS'],'.',ms=2.5)
 ax3.plot(track.ra, track.dec, 'k.', ms=1.)
@@ -234,7 +236,8 @@ if do_bg_model == 'yes':
     xdgmm_best = models[i_best]
     gmm_best = models_gmm[i_best] #Me quedo con el mejor modelo de gmm segun xd
     
-    if printBIC=='yes':
+    if printBIC == 'yes':
+
         fig4=plt.figure(4,figsize=(8,6))
         fig4.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.14,left=0.19,right=0.97)
         ax4=fig4.add_subplot(111)
@@ -246,6 +249,7 @@ if do_bg_model == 'yes':
         ax4.set_ylabel('BIC/N')
         ax4.grid()
         fig4.savefig('BIC.png')
+
 
     p_bgn = np.exp(gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T)) #Probabilidad del fondo para cada estrella n
     np.save('p_bgn.npy', p_bgn)

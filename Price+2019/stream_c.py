@@ -31,10 +31,10 @@ import emcee
 import corner	
 
 
-nohup = open('nohup.out', 'w+')
-nohup.close()
+global phi1, y, C, p_bgn #Defino variables globales
 
 Start = datetime.datetime.now()
+
 print('Inicio: ', Start, '\n')
 
 print('Cargando datos \n')
@@ -43,7 +43,6 @@ print('Cargando datos \n')
 f = fits.open(tabla)
 data = f[1].data
 # data.columns
-
 
 print('Cargando track y transformando coordenadas \n')
 
@@ -321,11 +320,28 @@ def log_st(theta_st, phi1, y, C):
     
     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
 
+def log_st_global(theta_st):
+    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
+
+    model_mu1 = a_mu1 + b_mu1*(phi1.value-x_mu1) + c_mu1*(phi1.value-x_mu1)**2
+    model_mu2 = a_mu2 + b_mu2*(phi1.value-x_mu2) + c_mu2*(phi1.value-x_mu2)**2
+    model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
+    model = np.array([model_mu1, model_mu2, model_d])
+
+    return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
+
+
 #Defino log-likelihood 
 def log_likelihood(theta, phi1, y, C, p_bgn):
     theta_st = theta[0:12]
     f = theta[12]
     return np.sum(np.log( f * np.exp(log_st(theta_st, phi1, y, C)) + (1-f) * p_bgn))
+
+def log_likelihood_global(theta):
+    theta_st = theta[0:12]
+    f = theta[12]
+    return np.sum(np.log( f * np.exp(log_st_global(theta_st)) + (1-f) * p_bgn))
+
 
 #Defino prior
 def log_unif(p, lim_inf, lim_sup):
@@ -400,6 +416,12 @@ def log_posterior(theta, phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif):
         return -np.inf
     return lp + log_likelihood(theta, phi1, y, C, p_bgn)
 
+def log_posterior_global(theta, mu, sigma, d_mean, e_dd, lim_unif):
+    lp = log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_global(theta)
+
 
 print('MCMC')
 
@@ -436,16 +458,17 @@ print("{0} CPUs".format(ncpu))
 
 #NCPU RUN
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif), pool=pool)
+    #sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif), pool=pool)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_global, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool)
     start = time.time()
     sampler.run_mcmc(pos, steps, progress=True);
     end = time.time()
     multi_time = end-start 
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
 
-#tau = sampler.get_autocorr_time()
-#print('tau: ', tau)
-#print('tau promedio: {}'.format(np.mean(tau)))
+tau = sampler.get_autocorr_time()
+print('tau: ', tau)
+print('tau promedio: {}'.format(np.mean(tau)))
 
 flat_samples = sampler.get_chain(discard=discard, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
@@ -453,11 +476,10 @@ print('Tamano muestra: {}'.format(flat_samples.shape))
 columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
 
-fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.20)
+fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25)
 fig6.subplots_adjust(bottom=0.05,left=0.05)
 
 fig6.savefig('corner_plot.png')
-
 
 
 print('Guardando muestras y posteriors \n')
@@ -492,7 +514,7 @@ theta_med = flat_samples[i_50]
 p5 = np.percentile(post,5)
 p95 = np.percentile(post,95)
 i_5 = abs(post-p5).argmin()
-i_95 = abs(post-p5).argmin()
+i_95 = abs(post-p95).argmin()
 
 theta_5 = flat_samples[i_5]
 theta_95 = flat_samples[i_95]
@@ -505,7 +527,7 @@ theta_resul.loc[1] = theta_med
 theta_resul.loc[2] = theta_5
 theta_resul.loc[3] = theta_95
 theta_resul.index = ['MAP','median','5th','95th']
-theta_resul.to_csv('theta_resul.csv', index=False)
+theta_resul.to_csv('theta_resul.csv', index=True)
 
 
 print('Guardando membresias \n')
@@ -523,3 +545,4 @@ Memb.to_csv('memb_prob.csv', index=False)
 
 End = datetime.datetime.now()
 print('Final: ', End, '\n')
+

@@ -14,7 +14,7 @@ C = np.array([[0.05**2, 0., 0.], [0., 0.05**2, 0.], [0., 0., 0.2**2]]) #mas/yr, 
 d_mean, e_dd = 23.6, 0.8
 mu = np.array([3.78307899, 0.71613004])
 e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
-cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
+cov_mu = rho_mu*e_mu1*e_mu2 #rho_xyes= sigma_xy/(sigma_x*sigma_y)
 sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
 
 lim_unif = np.array([-100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -20, 15, -20, 15, -20, 15, 0, 1])

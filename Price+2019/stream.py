@@ -517,7 +517,7 @@ theta_med = flat_samples[i_50]
 p5 = np.percentile(post,5)
 p95 = np.percentile(post,95)
 i_5 = abs(post-p5).argmin()
-i_95 = abs(post-p5).argmin()
+i_95 = abs(post-p95).argmin()
 
 theta_5 = flat_samples[i_5]
 theta_95 = flat_samples[i_95]
@@ -530,7 +530,7 @@ theta_resul.loc[1] = theta_med
 theta_resul.loc[2] = theta_5
 theta_resul.loc[3] = theta_95
 theta_resul.index = ['MAP','median','5th','95th']
-theta_resul.to_csv('theta_resul.csv', index=False)
+theta_resul.to_csv('theta_resul.csv', index=True)
 
 
 print('Guardando membresias \n')

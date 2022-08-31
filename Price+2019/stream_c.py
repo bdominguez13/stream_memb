@@ -32,12 +32,6 @@ import corner
 
 
 global phi1, y, C, p_bgn #Defino variables globales
-<<<<<<< HEAD:Price+2019/stream_c.py
-=======
-
-nohup = open('nohup.out', 'w+')
-nohup.close()
->>>>>>> e8b332916f849f241c07e076cbf52c44ef9b130e:Price+2019/stream.py
 
 Start = datetime.datetime.now()
 
@@ -323,10 +317,6 @@ def log_st(theta_st, phi1, y, C):
     
     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
 
-<<<<<<< HEAD:Price+2019/stream_c.py
-=======
-
->>>>>>> e8b332916f849f241c07e076cbf52c44ef9b130e:Price+2019/stream.py
 def log_st_global(theta_st):
     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
 
@@ -390,9 +380,9 @@ def log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     p_x1 = log_unif(x_mu1, lim_unif[12], lim_unif[13])
     p_x2 = log_unif(x_mu2, lim_unif[14], lim_unif[15])
     p_xd = log_unif(x_d, lim_unif[16], lim_unif[17])
-                    
+
     p_f = log_unif(f, lim_unif[18], lim_unif[19])
-                    
+ 
     return p_a12 + p_ad + p_b1 + p_b2 + p_bd + p_c1 + p_c2 + p_cd + p_x1 + p_x2 + p_xd + p_f
 
 
@@ -513,7 +503,7 @@ theta_post.to_csv('theta_post.csv', index=False)
 flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1) 
 
 
-#Maximum a Posterior    
+#Maximum a Posterior
 MAP = max(post)
 theta_max = flat_samples[np.argmax(post)]
 
@@ -553,7 +543,7 @@ memb = np.exp(log_st(theta_st, phi1, y, C))
 inside10 = memb > 0.1 
 inside50 = memb > 0.5
 
-Memb = pd.DataFrame({'ID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb%': memb,'inside10': inside10, 'inside50': inside50})
+Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb%': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)
 
 

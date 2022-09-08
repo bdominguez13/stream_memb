@@ -30,7 +30,6 @@ import datetime, time
 import emcee
 import corner	
 
-
 global phi1, y, C, p_bgn #Defino variables globales
 
 Start = datetime.datetime.now()
@@ -347,24 +346,10 @@ def log_unif(p, lim_inf, lim_sup):
     return -np.inf
 
 
-#d_mean, e_dd = 23.6, 0.8
-#mm = np.abs(phi1_t.value)<0.1 #Puntos del track con phi1 alrederor de 0
-#mu = np.array([np.mean(pmphi1_t.value[mm]), np.mean(pmphi2_t.value[mm])]) #Valores medios de mu1 y mu2 alrededor de phi1=0
-#e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
-#cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-#sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
-
-
 print('VAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]))
 
 def log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
-    
-    #d_mean, e_dd = 23.6, 0.8
-    #mu = np.array([3.78307899, 0.71613004])
-    #e_mu1, e_mu2, rho_m = 0.022, 0.025, -0.39
-    #cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-    #sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
     
     p_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
     p_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)
@@ -420,12 +405,6 @@ def log_posterior_global(theta, mu, sigma, d_mean, e_dd, lim_unif):
     return lp + log_likelihood_global(theta)
 
 
-def log_posterior_global(theta, mu, sigma, d_mean, e_dd, lim_unif):
-    lp = log_prior(theta, mu, sigma, d_mean, e_dd, lim_unif)
-    if not np.isfinite(lp):
-        return -np.inf
-    return lp + log_likelihood_global(theta)
-
 print('MCMC')
 
 ##MCMC
@@ -444,9 +423,10 @@ params_mu1, _ = curve_fit(model, phi1.value[miembro], pmphi1.value[miembro])
 params_mu2, _ = curve_fit(model, phi1.value[miembro], pmphi2.value[miembro])
 params_d, _ = curve_fit(model, phi1.value[miembro], d[miembro])
 
-init = np.array([params_mu1[0], params_mu2[0], params_d[0], params_mu1[1], params_mu2[1], params_d[1], params_mu1[2], params_mu2[2], params_d[2], params_mu1[3], params_mu2[3], params_d[3], np.random.uniform(0, 1)])
+init = np.array([params_mu1[0], params_mu2[0], params_d[0], params_mu1[1], params_mu2[1], params_d[1], params_mu1[2], params_mu2[2], params_d[2], params_mu1[3], params_mu2[3], params_d[3], miembro.sum()/phi1.value.size])
 pos = init*np.ones((nwalkers,ndim)) + init*1e-1*np.random.randn(nwalkers, 13) #13 parametros iniciales
 
+print('Valores iniciales: ', init)
 
 #SERIAL RUN
 ##sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=(phi1, y, C, p_bgn, mu, sigma, d_mean, e_dd, lim_unif))

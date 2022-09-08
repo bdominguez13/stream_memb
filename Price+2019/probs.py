@@ -1,10 +1,6 @@
-from datos import *
-
 from scipy.stats import multivariate_normal
 from scipy.stats import norm
 
-
-print('\nVAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]))
 
 #Defino log-likelihood del stream
 def log_st(theta_st, phi1, y, C):

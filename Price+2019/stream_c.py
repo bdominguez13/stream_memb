@@ -340,11 +340,14 @@ def log_likelihood_global(theta):
 
 
 #Defino prior
-def log_unif(p, lim_inf, lim_sup):
-    if p>lim_inf and p<lim_sup:
-        return 0.0
-    return -np.inf
 
+def log_unif(p, lim_inf, lim_sup):
+    if lim_inf > lim_sup:
+        print('Error: lim_inf > lim_sup')
+    else:
+        if p>lim_inf and p<lim_sup:
+            return 0.0
+        return -np.inf
 
 print('VAPs matriz cov: {} \n'.format(np.linalg.eig(sigma)[0]))
 

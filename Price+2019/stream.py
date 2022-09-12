@@ -346,9 +346,12 @@ def log_likelihood_global(theta):
 
 #Defino prior
 def log_unif(p, lim_inf, lim_sup):
-    if p>lim_inf and p<lim_sup:
-        return 0.0
-    return -np.inf
+    if lim_inf > lim_sup:
+        print('Error: lim_inf > lim_sup')
+    else:
+        if p>lim_inf and p<lim_sup:
+            return 0.0
+        return -np.inf
 
 
 #d_mean, e_dd = 23.6, 0.8

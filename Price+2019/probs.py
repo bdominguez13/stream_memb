@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import multivariate_normal
 from scipy.stats import norm
 
+global y, phi1, C, p_bgn
 
 #Defino log-likelihood del stream
 def log_st(theta_st, phi1, y, C):

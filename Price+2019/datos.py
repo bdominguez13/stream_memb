@@ -15,6 +15,8 @@ import gala.coordinates as gc
 import galstreams
 
 
+global y, phi1, C, p_bgn
+
 print('Cargando datos \n')
 
 ##Cargo datos

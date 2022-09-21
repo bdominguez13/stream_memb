@@ -333,7 +333,7 @@ mm = np.abs(phi1_t.value)<0.1 #Puntos del track con phi1 alrederor de 0
 mu = np.array([np.mean(pmphi1_t.value[mm]), np.mean(pmphi2_t.value[mm])]) #Valores medios de mu1 y mu2 alrededor de phi1=0
 e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
 cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
+sigma = np.array([[(e_mu1*10)**2, -(cov_mu*100)], [-(cov_mu*100), (e_mu2*10)**2]])
 
 
 #print('VAPs: ',np.linalg.eig(sigma)[0])
@@ -346,7 +346,7 @@ def log_prior(theta):
     mu = np.array([3.78307899, 0.71613004])
     e_mu1, e_mu2, rho_m = 0.022, 0.025, -0.39
     cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
-    sigma = np.array([[(e_mu1*10)**2, -(cov_mu*10)**2], [-(cov_mu*10)**2, (e_mu2*10)**2]])
+    sigma = np.array([[(e_mu1*10)**2, -(cov_mu*100)], [-(cov_mu*100), (e_mu2*10)**2]])
     
     p_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
     p_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)

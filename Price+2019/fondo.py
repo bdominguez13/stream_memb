@@ -95,7 +95,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
 
 
         #Comparo modelo del fondo con los datos
-        sample = gmm_best.sample(ra_out.size)
+        sample = gmm_best.sample(pmra_out.size)
 
         fig5=plt.figure(5,figsize=(10,10))
         fig5.subplots_adjust(wspace=0.4,hspace=0.3,top=0.98,bottom=0.11,left=0.14,right=0.97)

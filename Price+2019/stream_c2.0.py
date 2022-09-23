@@ -62,6 +62,7 @@ print('Modelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
 ll_bgn, p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
 
+probs.ll_bgn = ll_bgn
 probs.p_bgn = p_bgn
 
 print('MCMC')

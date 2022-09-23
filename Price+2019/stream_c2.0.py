@@ -70,7 +70,7 @@ miembro_PW = inside_PW & (data['Memb']>0.5)
 pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
 
 #SERIAL RUN
-#sampler = emcee.EnsembleSampler(nwalkers, ndim, ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif))
+#sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif))
 #start = time.time()
 #sampler.run_mcmc(pos, steps, progress=True);
 #end = time.time()
@@ -83,7 +83,7 @@ print("{0} CPUs".format(ncpu))
 #NCPU RUN
 dtype = [("(arg1, arg2)", object)]
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool, bolbs_dtype=dtype)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool, bolbs_dtype=dtype)
     start = time.time()
     pos, _, _, _ = sampler.run_mcmc(pos0, burn_in, progress=True)
     sampler.reset()

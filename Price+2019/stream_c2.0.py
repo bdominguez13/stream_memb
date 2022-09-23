@@ -12,22 +12,6 @@ import scipy
 import seaborn as sns
 sns.set(style="ticks", context="poster")
 
-# import astropy
-# from astropy.io import fits
-# from astropy.table import Table
-# import astropy.coordinates as ac
-# import astropy.units as u
-# import gala.coordinates as gc
-# import galstreams
-
-# from astroML.density_estimation import XDGMM
-# from sklearn.mixture import GaussianMixture
-
-# from scipy.optimize import curve_fit
-
-# from scipy.stats import multivariate_normal
-# from scipy.stats import norm
-
 import os #Avoids issues with paralellization in emcee
 os.environ["OMP_NUM_THREADS"] = "1"
 from multiprocessing import Pool
@@ -42,7 +26,6 @@ Start = datetime.datetime.now()
 
 print('Inicio: ', Start, '\n')
 
-print('Cargo datos \n')
 tabla, st, do_bg_model, printBIC, N_inf, N_sup, printBIC, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
 data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out = datos.datos(tabla, st, d_inf, d_sup)
@@ -74,7 +57,9 @@ pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
 # dtype = [("(arg1, arg2)", object)]
 #sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), blobs_dtype=dtype)
 #start = time.time()
-#sampler.run_mcmc(pos, steps, progress=True);
+# pos, _, _, _ = sampler.run_mcmc(pos0, burn_in, progress=True)
+# sampler.reset()
+# sampler.run_mcmc(pos, steps, progress=True)
 #end = time.time()
 #serial_time = end-start
 #print(serial_time)
@@ -217,6 +202,7 @@ ax7.set_xlim([-20,15])
 ax7.set_ylim([-2.5,2.5]);
 
 fig7.figsave('resultados.png')
+
 
 End = datetime.datetime.now()
 print('Final: ', End, '\n')

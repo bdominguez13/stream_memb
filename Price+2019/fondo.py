@@ -31,13 +31,14 @@ def compute_GaussianMixture(N, X, covariance_type='full', max_iter=1000):
         print("GMM_{0} converge:".format(N[i]), models[i].converged_)
     return models
     
-def fondo(do_bg_model, printBIC, N, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out):
+def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out):
     """Busca mejor numero de gaussianas a usar con un modelo de extreme decovolution (XD) para calcular de la probabilidad de que una estrella pertenezca al backgroud (p_bgn) utilizando un modelo de mezcla de gaussianas (GMM)
     
     Inputs:
     do_bg_model: Calcular (yes) modelo de fondo o cargar directamente (no) p_bgn de ya haber sido clculada antes
     printBIC: Imprimir (yes/no) grafico del BIC en funcón del numero de gaussianas segun XD
     N: Array con el numero de gaussianas donde busca la mejor cantidad (N[i] > 1)
+    pmra, pmdec, d: Movimientos propios en ar y dec y distancias de todas las estrellas
     pmra_out, pmdec_out, d_out: Movimientos propios en ar y dec y distancias de las estrellas fuera del track
     e_prma_out, e_pmdec_out, e_d_out: Errores en movimientos propios en ar y dec y distancias de las estrellas fuera del track
     

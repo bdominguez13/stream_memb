@@ -45,7 +45,7 @@ print('Inicio: ', Start, '\n')
 print('Cargo datos \n')
 tabla, st, do_bg_model, printBIC, N_inf, N_sup, printBIC, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out = datos.datos(tabla, st, d_inf, d_sup)
+data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out = datos.datos(tabla, st, d_inf, d_sup)
 
 mu = np.array([mu1_mean, mu2_mean])
 sigma = np.array([[(e_mu1*10)**2, (cov_mu*100)], [(cov_mu*100), (e_mu2*10)**2]]) #Matriz de covarianza del prior gaussiano de los movimientos propios en el frame de la corriente
@@ -60,7 +60,7 @@ probs.C = C
 
 print('Modelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
-p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra_out, pmdec_out, d_out, e_prma_out, e_pmdec_out, e_d_out)
+p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
 
 probs.p_bgn = p_bgn
 

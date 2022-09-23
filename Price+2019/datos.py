@@ -26,12 +26,12 @@ def datos(tabla, st, d_inf, d_sup):
     
     Outputs:
     data: Tabla con los datos originales
-    phi1, phi2: posicion de las estrellas en el frame de la corriente
-    pmphi1, pmphi2: moviemientos propios de las estrellas en el frame de la corriente
-    d: distancia de las estrellas
-    phi1_t, phi2_t, pmphi1_t, pmphi2_t: posicion y movimientos propios del track en el frame de la corriente
+    phi1, phi2: Posicion de las estrellas en el frame de la corriente
+    pmphi1, pmphi2: Moviemientos propios de las estrellas en el frame de la corriente
+    pmra, pmdec, d: Movimientos propios en ascención recta y declinacion y distancias de las estrellas
+    phi1_t, phi2_t, pmphi1_t, pmphi2_t: Posicion y movimientos propios del track en el frame de la corriente
     pmra_out, pmdec_out, d_out: movimientos propios y distancia de las estrellas fuera del track en ar y dec
-    e_pmra_out, e_dec_out, e_d_out: errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec    
+    e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec    
     """
 
     print('\nCargando datos \n')
@@ -182,5 +182,5 @@ def datos(tabla, st, d_inf, d_sup):
     fig2.savefig('track_memb.png')
     # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_dec_out, e_d_out
+    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out
 

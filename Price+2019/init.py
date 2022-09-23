@@ -32,7 +32,7 @@ def model(phi1, a, b, c, x):
 
 
 def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
-        """
+    """
     Inputs:
     phi1: Posiciones horizontales de las estrellas en el frame de la corriente
     pmphi1, pmphi2: Movimientos propios de las estrellas en el frame de la corriente

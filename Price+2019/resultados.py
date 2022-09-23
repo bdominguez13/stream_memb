@@ -33,7 +33,7 @@ def quantiles(x, flat_samples, q_min, q_max):
 
     #Percentiles q_min y q_max
     p_qmin = np.percentile(post, q_min)
-    p_qmaz = np.percentile(post, q_max)
+    p_qmax = np.percentile(post, q_max)
     i_qmin = abs(post-p_qmin).argmin()
     i_qmax = abs(post-p_qmax).argmin()
 

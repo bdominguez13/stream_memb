@@ -28,7 +28,7 @@ def parametros():
     tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
     st = 'Pal5-PW19' #Nombre de la corriente
 
-    do_bg_model = 'no' #Calcular (yes/no) modelo de fondo
+    do_bg_model = 'yes' #Calcular (yes/no) modelo de fondo
     N_inf, N_sup = 6, 7 #Numero min y (max+1) de gaussianas para el xd
     printBIC = 'no'
     

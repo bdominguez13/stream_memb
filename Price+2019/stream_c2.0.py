@@ -67,7 +67,7 @@ probs.p_bgn = p_bgn
 print('MCMC')
 inside_PW = (data['Track']==1)
 miembro_PW = inside_PW & (data['Memb']>0.5)
-pos0 = init.init(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
+pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
 
 #SERIAL RUN
 #sampler = emcee.EnsembleSampler(nwalkers, ndim, ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif))

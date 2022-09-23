@@ -83,7 +83,7 @@ print("{0} CPUs".format(ncpu))
 #NCPU RUN
 dtype = [("(arg1, arg2)", object)]
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool, bolbs_dtype=dtype)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool, blobs_dtype=dtype)
     start = time.time()
     pos, _, _, _ = sampler.run_mcmc(pos0, burn_in, progress=True)
     sampler.reset()

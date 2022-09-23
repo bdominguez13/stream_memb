@@ -70,7 +70,8 @@ miembro_PW = inside_PW & (data['Memb']>0.5)
 pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
 
 #SERIAL RUN
-#sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif))
+# dtype = [("(arg1, arg2)", object)]
+#sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), blobs_dtype=dtype)
 #start = time.time()
 #sampler.run_mcmc(pos, steps, progress=True);
 #end = time.time()

@@ -103,6 +103,8 @@ def ln_prior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     d_mean, e_dd: Media y varianza para a_d
     lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
     """
+    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
+    
     p_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
     p_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)
     

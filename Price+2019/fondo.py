@@ -103,8 +103,8 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         ax5.scatter(pmra_out, pmdec_out, s=1, label='Obs')
         ax5.scatter(sample[0][:,0], sample[0][:,1], s=1, label='GMM')
         # ax5.legend()
-        ax5.set_xlabel('$\\alpha$ (°)')
-        ax5.set_ylabel('$\delta$ (°)')
+        ax5.set_xlabel('$\mu_\\alpha$ (°)')
+        ax5.set_ylabel('$\mu_\delta$ (°)')
         # ax5.set_xlim([-5,1])
         # ax5.set_ylim([-5,1])
 
@@ -112,7 +112,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         ax5.scatter(pmra_out, d_out, s=1, label='Obs')
         ax5.scatter(sample[0][:,0], sample[0][:,2], s=1, label='GMM')
         ax5.legend()
-        ax5.set_xlabel('$\\alpha$ (°)')
+        ax5.set_xlabel('$\mu_\\alpha$ (°)')
         ax5.set_ylabel('$d$ (kpc)')
         # ax5.set_xlim([-5,1])
         # ax5.set_ylim([-5,1])
@@ -120,7 +120,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         ax5=fig5.add_subplot(223)
         ax5.scatter(pmdec_out, d_out, s=1, label='Obs')
         ax5.scatter(sample[0][:,1], sample[0][:,2], s=1, label='GMM')
-        ax5.set_xlabel('$\delta$ (°)')
+        ax5.set_xlabel('$\mu_\delta$ (°)')
         ax5.set_ylabel('$d$ (kpc)')
         # ax5.set_xlim([-5,1])
         # ax5.set_ylim([-5,1])
@@ -128,7 +128,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         ax5=fig5.add_subplot(224)
         ax5.hist(d_out,bins=70, alpha=0.7)
         ax5.hist(sample[0][:,2],bins=70, alpha=0.7)
-        ax5.set_xlim(0,40.)
+        ax5.set_xlim(0,60.)
         ax5.set_xlabel('$d$ (kpc)');
 
         fig5.savefig('bg_sample.png')

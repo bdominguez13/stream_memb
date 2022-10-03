@@ -6,6 +6,8 @@ from scipy.optimize import curve_fit
 #Forma1
 def init_prior(mu, sigma, d_mean, e_dd, lim_unif, nwalkers, ndim):
     """
+    Devuelve valores inciales para la MCMC a partir de los prior
+    
     Inputs:
     mu, sigma: Medias y matriz de covarianza para a_mu1 y a_mu2
     d_mean, e_dd: Media y varianza para a_d
@@ -33,11 +35,13 @@ def model(phi1, a, b, c, x):
 
 def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
     """
+    Devuelve valores inciales para la MCMC haciendo minimos cuadrados sobre el modelo con las estrellas que pertenecen a la corriente segun informacion previa
+    
     Inputs:
     phi1: Posiciones horizontales de las estrellas en el frame de la corriente
     pmphi1, pmphi2: Movimientos propios de las estrellas en el frame de la corriente
     d: Distancias de las estrellas
-    miembro: Mascara con las estrellas que perteneces a la corriente segun informacion previa
+    miembro: Mascara con las estrellas que pertenecen a la corriente segun informacion previa
     nwalker: Numero de caminadores
     ndim: Numero de parametros libres
     

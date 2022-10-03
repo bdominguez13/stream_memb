@@ -31,7 +31,8 @@ def datos(tabla, st, d_inf, d_sup):
     pmra, pmdec, d: Movimientos propios en ascención recta y declinacion y distancias de las estrellas
     phi1_t, phi2_t, pmphi1_t, pmphi2_t: Posicion y movimientos propios del track en el frame de la corriente
     pmra_out, pmdec_out, d_out: movimientos propios y distancia de las estrellas fuera del track en ar y dec
-    e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec    
+    e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec
+    footprint: Mascara con las estrellas espacialmente dentro del track
     """
 
     print('\nCargando datos \n')
@@ -78,6 +79,7 @@ def datos(tabla, st, d_inf, d_sup):
     
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
     #Select the field points inside the polygon footprint
+    footprint = mwsts[st].get_mask_in_poly_footprint(field)
     off = ~mwsts[st].get_mask_in_poly_footprint(field)
     
     ra_out = ra[off]
@@ -182,5 +184,5 @@ def datos(tabla, st, d_inf, d_sup):
     fig2.savefig('track_memb.png')
     # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out
+    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint
 

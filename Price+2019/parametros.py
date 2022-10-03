@@ -47,8 +47,8 @@ def parametros():
     # lim_unif = [(-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-20, 15), (-20, 15), (-20, 15), (0.004, 0.012)]
 
     #MCMC
-    nwalkers, ndim, steps = 104, 13, 2**17
-    burn_in, thin = 2**10, 2200
+    nwalkers, ndim, steps = 104, 13, 2**12#2**17
+    burn_in, thin = 50,1#2**10, 2200
     
     #quantiles
     q_min, q_max = 5, 95

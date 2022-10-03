@@ -20,7 +20,6 @@ import datetime, time
 import emcee
 import corner	
 
-global phi1, y, C, p_bgn, ll_bgn #Defino variables globales
 
 Start = datetime.datetime.now()
 
@@ -28,20 +27,26 @@ print('Inicio: ', Start, '\n')
 
 tabla, st, do_bg_model, printBIC, N_inf, N_sup, printBIC, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out = datos.datos(tabla, st, d_inf, d_sup)
+data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint = datos.datos(tabla, st, d_inf, d_sup)
 
-mu = np.array([mu1_mean, mu2_mean])
-sigma = np.array([[(e_mu1*10)**2, (cov_mu*100)], [(cov_mu*100), (e_mu2*10)**2]]) #Matriz de covarianza del prior gaussiano de los movimientos propios en el frame de la corriente
 
+miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
+
+#Parametros de la corriente
 y = np.array([pmphi1.value, pmphi2.value, d])
-C = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza de la corriente: mov propios y distancia (fija)
+C = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza: Fija para todas las estrellas
+
+#Parametros para el prior gaussiano de los movimientos propios en el frame de la corriente
+mu = np.array([mu1_mean, mu2_mean])
+sigma = np.array([[(e_mu1*10)**2, (cov_mu*100)], [(cov_mu*100), (e_mu2*10)**2]]) 
+
 
 #Para que funcione tengo que primero asignarle las variables globales al modulo probs
 probs.phi1 = phi1
 probs.y = y
 probs.C = C
 
-print('Modelo de fondo \n')
+print('\nModelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
 ll_bgn, p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
 
@@ -49,9 +54,8 @@ probs.ll_bgn = ll_bgn
 probs.p_bgn = p_bgn
 
 print('MCMC')
-inside_PW = (data['Track']==1)
-miembro_PW = inside_PW & (data['Memb']>0.5)
-pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim)
+pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim) #Inicializo haciendo minimos cuadrados con las estrellas que ya se que son miembros segun PW2019
+
 
 #SERIAL RUN
 # dtype = [("(arg1, arg2)", object)]
@@ -79,6 +83,7 @@ with Pool() as pool:
     multi_time = end-start 
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
 
+    
 tau = sampler.get_autocorr_time()
 print('tau: ', tau)
 print('tau promedio: {}'.format(np.mean(tau)))
@@ -89,9 +94,9 @@ print('Tamano muestra: {}'.format(flat_samples.shape))
 columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
 
+
 fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25)
 fig6.subplots_adjust(bottom=0.05,left=0.05)
-
 fig6.savefig('corner_plot.png')
 
 
@@ -106,8 +111,13 @@ flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), ax
 
 
 #Maximum a Posterior, median y percentiles
-x = np.linspace(min(phi1.value), max(phi1.value), 500)
+n = 500
+x = np.linspace(min(phi1.value), max(phi1.value), n)
 theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
+
+median_mu1 = theta_50[0] + theta_50[3]*(x-theta_50[9]) + theta_50[6]*(x-theta_50[9])**2
+median_mu2 = theta_50[1] + theta_50[4]*(x-theta_50[10]) + theta_50[7]*(x-theta_50[10])**2
+median_d = theta_50[2] + theta_50[5]*(x-theta_50[11]) + theta_50[8]*(x-theta_50[11])**2
 
 print('\nGuardando resultados \n')
 
@@ -129,19 +139,19 @@ memb = resultados.memb(phi1, flat_blobs)
 inside10 = memb > 0.1 
 inside50 = memb > 0.5
 
-Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb%': memb,'inside10': inside10, 'inside50': inside50})
+Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)
 
 
 print('Graficando resultados')
 
-field = ac.SkyCoord(ra=data['RA_ICRS']*u.deg, dec=data['DE_ICRS']*u.deg, frame='icrs')
-footprint = mwsts[st].get_mask_in_poly_footprint(field)
-inside = memb['inside10']==True
-star = (memb['inside50']==True) & (footprint==True)
+# field = ac.SkyCoord(ra=data['RA_ICRS']*u.deg, dec=data['DE_ICRS']*u.deg, frame='icrs')
+# footprint = mwsts[st].get_mask_in_poly_footprint(field)
+inside = inside10
+star = (inside50==True) & (footprint==True)
 
-print('Inside: ', inside)
-print('Stars: ', star)
+print('Inside: ', inside.sum())
+print('Stars: ', star.sum())
 
 fig7=plt.figure(7,figsize=(12,8))
 fig7.subplots_adjust(wspace=0.4,hspace=0.34,top=0.95,bottom=0.12,left=0.11,right=0.98)
@@ -163,8 +173,9 @@ ax7.plot(phi1, d,'.', c='gray', ms=1.)
 m = ax7.scatter(phi1[inside], d[inside], s=10, c=memb[inside], cmap='Blues')
 cb = plt.colorbar(m)
 ax7.plot(x, quantiles_d[1], color="orangered")
+ax7.plot(x, median_d, color="red")
 ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro], d[miembro],'*',c='black', ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW], d[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
 ax7.plot(phi1[star], d[star],'*', c='red', ms=10., label='Yo')
 # ax7.plot(x,true_d,'k-',lw=1.5)
 # ax7.set_xlabel('$\phi_1$ (°)')
@@ -176,10 +187,10 @@ ax7=fig7.add_subplot(223)
 ax7.plot(phi1,pmphi1,'.', c='gray', ms=1.)
 m = ax7.scatter(phi1[inside],pmphi1[inside], s=10, c=memb[inside], cmap='Blues')
 cb = plt.colorbar(m)
-ax7.plot(x, models[1,:], '-', c='orange', lw=2)
 ax7.plot(x, quantiles_mu1[1], color="orangered")
+ax7.plot(x, median_mu1, color="red")
 ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro],pmphi1[miembro],'*',c='black',ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW],pmphi1[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
 ax7.plot(phi1[star],pmphi1[star],'*',c='red',ms=10.,label='Yo')
 # ax7.plot(x,true_mu1,'k-', lw=1.5)
 ax7.set_xlabel('$\phi_1$ (°)')
@@ -192,8 +203,9 @@ ax7.plot(phi1,pmphi2,'.', c='gray', ms=1.)
 m = ax7.scatter(phi1[inside],pmphi2[inside], s=10, c=memb[inside], cmap='Blues')
 cb = plt.colorbar(m)
 ax7.plot(x, quantiles_mu2[1], color="orangered")
+ax7.plot(x, median_mu2, color="red")
 ax7.fill_between(x, quantiles_mu2[0], quantiles_mu2[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro],pmphi2[miembro],'*',c='black',ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW],pmphi2[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
 ax7.plot(phi1[star],pmphi2[star],'*',c='red',ms=10.,label='Yo')
 # ax7.plot(x,true_mu2,'k-',lw=1.5)
 ax7.set_xlabel('$\phi_1$ (°)')
@@ -201,7 +213,7 @@ ax7.set_ylabel('$\mu_2$ ("/año)');
 ax7.set_xlim([-20,15])
 ax7.set_ylim([-2.5,2.5]);
 
-fig7.figsave('resultados.png')
+fig7.savefig('resultados.png')
 
 
 End = datetime.datetime.now()

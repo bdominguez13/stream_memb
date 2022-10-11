@@ -25,9 +25,9 @@ Start = datetime.datetime.now()
 
 print('Inicio: ', Start, '\n')
 
-tabla, st, do_bg_model, printBIC, N_inf, N_sup, printBIC, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
+tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint = datos.datos(tabla, st, d_inf, d_sup)
+data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint = datos.datos(tabla, st, printTrack, d_inf, d_sup)
 
 
 miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
@@ -100,34 +100,13 @@ fig6.subplots_adjust(bottom=0.05,left=0.05)
 fig6.savefig('corner_plot.png')
 
 
-print('Guardando muestras y posteriors \n')
+print('Guardando muestras \n')
 
 ##Guardo las posteriors
 post = sampler.get_log_prob(discard=0, thin=thin, flat=True)
 
 theta_post['Posterior'] = post
 theta_post.to_csv('theta_post.csv', index=False)
-flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1) 
-
-
-#Maximum a Posterior, median y percentiles
-n = 500
-x = np.linspace(min(phi1.value), max(phi1.value), n)
-theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
-
-median_mu1 = theta_50[0] + theta_50[3]*(x-theta_50[9]) + theta_50[6]*(x-theta_50[9])**2
-median_mu2 = theta_50[1] + theta_50[4]*(x-theta_50[10]) + theta_50[7]*(x-theta_50[10])**2
-median_d = theta_50[2] + theta_50[5]*(x-theta_50[11]) + theta_50[8]*(x-theta_50[11])**2
-
-print('\nGuardando resultados \n')
-
-theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
-theta_resul.loc[0] = theta_max
-theta_resul.loc[1] = theta_50
-theta_resul.loc[2] = theta_qmin
-theta_resul.loc[3] = theta_qmax
-theta_resul.index = ['MAP','median','{}th'.format(q_min),'{}th'.format(q_max)]
-theta_resul.to_csv('theta_resul.csv', index=True)
 
 
 print('Guardando membresias \n')
@@ -143,77 +122,104 @@ Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb':
 Memb.to_csv('memb_prob.csv', index=False)
 
 
-print('Graficando resultados')
+### A partir de acá es posible que la computaddora se quede sin memoria, tengo que ver como optimizar los calculos. Igual antes de eso hay problemas mas graves que atender primero :|
 
-# field = ac.SkyCoord(ra=data['RA_ICRS']*u.deg, dec=data['DE_ICRS']*u.deg, frame='icrs')
-# footprint = mwsts[st].get_mask_in_poly_footprint(field)
-inside = inside10
-star = (inside50==True) & (footprint==True)
 
-print('Inside: ', inside.sum())
-print('Stars: ', star.sum())
 
-fig7=plt.figure(7,figsize=(12,8))
-fig7.subplots_adjust(wspace=0.4,hspace=0.34,top=0.95,bottom=0.12,left=0.11,right=0.98)
+# print('Guardando percentiles \n')
+# #Maximum a Posterior, median y percentiles
+# flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1) 
 
-ax7=fig7.add_subplot(221)
-ax7.plot(phi1, phi2,'.', c='gray', ms=1.)
-m = ax7.scatter(phi1[inside], phi2[inside], s=10, c=memb[inside], cmap='Blues')
-cb = plt.colorbar(m)
-ax7.plot(phi1_t,phi2_t,'k.',ms=0.5)
-ax7.plot(phi1[miembro_PW], phi2[miembro_PW],'*', c='black',ms=10., label='Price-Whelan')
-ax7.plot(phi1[star], phi2[star],'*',c='red', ms=10., label='Yo')
+# n = 500
+# x = np.linspace(min(phi1.value), max(phi1.value), n)
+# theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
+
+# median_mu1 = theta_50[0] + theta_50[3]*(x-theta_50[9]) + theta_50[6]*(x-theta_50[9])**2
+# median_mu2 = theta_50[1] + theta_50[4]*(x-theta_50[10]) + theta_50[7]*(x-theta_50[10])**2
+# median_d = theta_50[2] + theta_50[5]*(x-theta_50[11]) + theta_50[8]*(x-theta_50[11])**2
+
+# print('\nGuardando resultados \n')
+
+# theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
+# theta_resul.loc[0] = theta_max
+# theta_resul.loc[1] = theta_50
+# theta_resul.loc[2] = theta_qmin
+# theta_resul.loc[3] = theta_qmax
+# theta_resul.index = ['MAP','median','{}th'.format(q_min),'{}th'.format(q_max)]
+# theta_resul.to_csv('theta_resul.csv', index=True)
+
+
+# print('Graficando resultados')
+
+# # field = ac.SkyCoord(ra=data['RA_ICRS']*u.deg, dec=data['DE_ICRS']*u.deg, frame='icrs')
+# # footprint = mwsts[st].get_mask_in_poly_footprint(field)
+# inside = inside10
+# star = (inside50==True) & (footprint==True)
+
+# print('Inside: ', inside.sum())
+# print('Stars: ', star.sum())
+
+# fig7=plt.figure(7,figsize=(12,8))
+# fig7.subplots_adjust(wspace=0.4,hspace=0.34,top=0.95,bottom=0.12,left=0.11,right=0.98)
+
+# ax7=fig7.add_subplot(221)
+# ax7.plot(phi1, phi2,'.', c='gray', ms=1.)
+# m = ax7.scatter(phi1[inside], phi2[inside], s=10, c=memb[inside], cmap='Blues')
+# cb = plt.colorbar(m)
+# ax7.plot(phi1_t,phi2_t,'k.',ms=0.5)
+# ax7.plot(phi1[miembro_PW], phi2[miembro_PW],'*', c='black',ms=10., label='Price-Whelan')
+# ax7.plot(phi1[star], phi2[star],'*',c='red', ms=10., label='Yo')
+# # ax7.set_xlabel('$\phi_1$ (°)')
+# ax7.set_ylabel('$\phi_2$ (°)')
+# ax7.set_xlim([-20,15])
+# ax7.set_ylim([-3,5])
+
+# ax7=fig7.add_subplot(222)
+# ax7.plot(phi1, d,'.', c='gray', ms=1.)
+# m = ax7.scatter(phi1[inside], d[inside], s=10, c=memb[inside], cmap='Blues')
+# cb = plt.colorbar(m)
+# ax7.plot(x, quantiles_d[1], color="orangered")
+# ax7.plot(x, median_d, color="red")
+# ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.5)
+# ax7.plot(phi1[miembro_PW], d[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+# ax7.plot(phi1[star], d[star],'*', c='red', ms=10., label='Yo')
+# # ax7.plot(x,true_d,'k-',lw=1.5)
+# # ax7.set_xlabel('$\phi_1$ (°)')
+# ax7.set_ylabel('$d$ (kpc)')
+# ax7.set_xlim([-20,15])
+# ax7.set_ylim([13,25])
+
+# ax7=fig7.add_subplot(223)
+# ax7.plot(phi1,pmphi1,'.', c='gray', ms=1.)
+# m = ax7.scatter(phi1[inside],pmphi1[inside], s=10, c=memb[inside], cmap='Blues')
+# cb = plt.colorbar(m)
+# ax7.plot(x, quantiles_mu1[1], color="orangered")
+# ax7.plot(x, median_mu1, color="red")
+# ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.5)
+# ax7.plot(phi1[miembro_PW],pmphi1[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
+# ax7.plot(phi1[star],pmphi1[star],'*',c='red',ms=10.,label='Yo')
+# # ax7.plot(x,true_mu1,'k-', lw=1.5)
 # ax7.set_xlabel('$\phi_1$ (°)')
-ax7.set_ylabel('$\phi_2$ (°)')
-ax7.set_xlim([-20,15])
-ax7.set_ylim([-3,5])
+# ax7.set_ylabel('$\mu_1$ ("/año)')
+# ax7.set_xlim([-20,15])
+# ax7.set_ylim([1,6])
 
-ax7=fig7.add_subplot(222)
-ax7.plot(phi1, d,'.', c='gray', ms=1.)
-m = ax7.scatter(phi1[inside], d[inside], s=10, c=memb[inside], cmap='Blues')
-cb = plt.colorbar(m)
-ax7.plot(x, quantiles_d[1], color="orangered")
-ax7.plot(x, median_d, color="red")
-ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro_PW], d[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
-ax7.plot(phi1[star], d[star],'*', c='red', ms=10., label='Yo')
-# ax7.plot(x,true_d,'k-',lw=1.5)
+# ax7=fig7.add_subplot(224)
+# ax7.plot(phi1,pmphi2,'.', c='gray', ms=1.)
+# m = ax7.scatter(phi1[inside],pmphi2[inside], s=10, c=memb[inside], cmap='Blues')
+# cb = plt.colorbar(m)
+# ax7.plot(x, quantiles_mu2[1], color="orangered")
+# ax7.plot(x, median_mu2, color="red")
+# ax7.fill_between(x, quantiles_mu2[0], quantiles_mu2[2], color="orange", alpha=0.5)
+# ax7.plot(phi1[miembro_PW],pmphi2[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
+# ax7.plot(phi1[star],pmphi2[star],'*',c='red',ms=10.,label='Yo')
+# # ax7.plot(x,true_mu2,'k-',lw=1.5)
 # ax7.set_xlabel('$\phi_1$ (°)')
-ax7.set_ylabel('$d$ (kpc)')
-ax7.set_xlim([-20,15])
-ax7.set_ylim([13,25])
+# ax7.set_ylabel('$\mu_2$ ("/año)');
+# ax7.set_xlim([-20,15])
+# ax7.set_ylim([-2.5,2.5]);
 
-ax7=fig7.add_subplot(223)
-ax7.plot(phi1,pmphi1,'.', c='gray', ms=1.)
-m = ax7.scatter(phi1[inside],pmphi1[inside], s=10, c=memb[inside], cmap='Blues')
-cb = plt.colorbar(m)
-ax7.plot(x, quantiles_mu1[1], color="orangered")
-ax7.plot(x, median_mu1, color="red")
-ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro_PW],pmphi1[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
-ax7.plot(phi1[star],pmphi1[star],'*',c='red',ms=10.,label='Yo')
-# ax7.plot(x,true_mu1,'k-', lw=1.5)
-ax7.set_xlabel('$\phi_1$ (°)')
-ax7.set_ylabel('$\mu_1$ ("/año)')
-ax7.set_xlim([-20,15])
-ax7.set_ylim([1,6])
-
-ax7=fig7.add_subplot(224)
-ax7.plot(phi1,pmphi2,'.', c='gray', ms=1.)
-m = ax7.scatter(phi1[inside],pmphi2[inside], s=10, c=memb[inside], cmap='Blues')
-cb = plt.colorbar(m)
-ax7.plot(x, quantiles_mu2[1], color="orangered")
-ax7.plot(x, median_mu2, color="red")
-ax7.fill_between(x, quantiles_mu2[0], quantiles_mu2[2], color="orange", alpha=0.5)
-ax7.plot(phi1[miembro_PW],pmphi2[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
-ax7.plot(phi1[star],pmphi2[star],'*',c='red',ms=10.,label='Yo')
-# ax7.plot(x,true_mu2,'k-',lw=1.5)
-ax7.set_xlabel('$\phi_1$ (°)')
-ax7.set_ylabel('$\mu_2$ ("/año)');
-ax7.set_xlim([-20,15])
-ax7.set_ylim([-2.5,2.5]);
-
-fig7.savefig('resultados.png')
+# fig7.savefig('resultados.png')
 
 
 End = datetime.datetime.now()

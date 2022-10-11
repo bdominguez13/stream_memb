@@ -164,4 +164,19 @@ def ln_posterior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     return lp + ll, (arg1, arg2)
 
 
+def ln_likelihood_prueba(theta):
 
+    theta_st = theta[0:12]
+    f = 1
+    arg1 = np.log(f) + lnlike_st(theta_st)
+    arg2 = np.log(1.-f) + ll_bgn
+    # return np.sum(np.log( f * np.exp(lnlike_st(theta_st)) + (1-f) * p_bgn))
+    return np.sum(np.logaddexp(arg1, arg2)), arg1, arg2
+
+def ln_posterior_prueba(theta, mu, sigma, d_mean, e_dd, lim_unif):
+
+    lp = ln_prior(theta, mu, sigma, d_mean, e_dd, lim_unif)
+    ll, arg1, arg2 = ln_likelihood_prueba(theta)
+    if not np.isfinite(lp):
+        return -np.inf, None
+    return lp + ll, (arg1, arg2)

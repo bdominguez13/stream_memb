@@ -27,7 +27,8 @@ def parametros():
     
     tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
     st = 'Pal5-PW19' #Nombre de la corriente
-
+    
+    printTrack = 'no'
     do_bg_model = 'no' #Calcular (yes/no) modelo de fondo
     N_inf, N_sup = 6, 7 #Numero min y (max+1) de gaussianas para el xd
     printBIC = 'no'
@@ -35,7 +36,7 @@ def parametros():
     d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
 
     #Matriz de covarianza del stream
-    C11, C22, C33 = 0.05**2, 0.05**2, 0.02**2  #mas/yr, mas/yr, kpc
+    C11, C22, C33 = 0.05**2, 0.05**2, 0.2**2  #mas/yr, mas/yr, kpc
     
     #Priors
     d_mean, e_dd = 23.6, 0.8
@@ -47,12 +48,12 @@ def parametros():
     # lim_unif = [(-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-20, 15), (-20, 15), (-20, 15), (0.004, 0.012)]
 
     #MCMC
-    nwalkers, ndim, steps = 104, 13, 2**12#2**17
-    burn_in, thin = 50,1#2**10, 2200
+    nwalkers, ndim, steps = 104, 13, 2**12 #2**17
+    burn_in, thin = 50, 10 #2**10, 2200
     
     #quantiles
     q_min, q_max = 5, 95
     
-    return tabla, st, do_bg_model, printBIC, N_inf, N_sup, printBIC, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max
+    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+import probs
 
 def quantiles(x, flat_samples, q_min, q_max):
     """
@@ -61,6 +62,21 @@ def quantiles(x, flat_samples, q_min, q_max):
     theta_qmax = flat_samples[i_qmax]
     
     return theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d
+
+
+def flat_blobs(flat_samples, ll_bgn):
+    """
+    A partir de la cadena achatada devuelta por el MCMC y el ln_like del fondo (ll_bgn), devuelve los argumentos para calcular el likelihood total (arg1, arg2) en forma de una lista de tuplas:
+    arg1 = np.log(f) + lnlike_st(theta_st)
+    arg2 = np.log(1.-f) + ll_bgn
+    """
+    probs.ll_bgn = ll_bgn
+    arg1, arg2 = [None for n in range(flat_samples.shape[0])], [None for n in range(flat_samples.shape[0])]
+    for i in range(flat_samples.shape[0]):
+        theta = flat_samples[i,0:13]
+        _, arg1[i], arg2[i] = probs.ln_likelihood(theta)
+    
+    return (arg1, arg2)
 
 
 def memb(phi1, flat_blobs):

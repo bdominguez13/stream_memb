@@ -1,4 +1,3 @@
-# from datos import *
 import numpy as np
 import pylab as plt
 import scipy
@@ -35,7 +34,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
     """Busca mejor numero de gaussianas a usar con un modelo de extreme decovolution (XD) para calcular de la probabilidad de que una estrella pertenezca al backgroud (p_bgn) utilizando un modelo de mezcla de gaussianas (GMM)
     
     Inputs:
-    do_bg_model: Calcular (yes) modelo de fondo o cargar directamente (no) p_bgn de ya haber sido clculada antes
+    do_bg_model: Calcular (yes) modelo de fondo o cargar directamente (no) ll_bgn de ya haber sido calculada antes
     printBIC: Imprimir (yes/no) grafico del BIC en funcón del numero de gaussianas segun XD
     N: Array con el numero de gaussianas donde busca la mejor cantidad (N[i] > 1)
     pmra, pmdec, d: Movimientos propios en ar y dec y distancias de todas las estrellas

@@ -154,7 +154,7 @@ def datos(tabla, st, printTrack, d_inf, d_sup):
         ax2.plot(phi1_t,pmphi1_t,'k.',ms=1.)
         ax2.plot(phi1[miembro],pmphi1[miembro],'*',c='red',ms=10.)
         ax2.set_xlabel('$\phi_1$ (°)')
-        ax2.set_ylabel('$\mu_1$ ("/año)')
+        ax2.set_ylabel('$\mu_{\phi_1}$ ("/año)')
         ax2.set_xlim([-20,15])
         ax2.set_ylim([1,6])
 
@@ -164,7 +164,7 @@ def datos(tabla, st, printTrack, d_inf, d_sup):
         ax2.plot(phi1_t,pmphi2_t,'k.',ms=1.)
         ax2.plot(phi1[miembro],pmphi2[miembro],'*',c='red',ms=10.)
         ax2.set_xlabel('$\phi_1$ (°)')
-        ax2.set_ylabel('$\mu_2$ ("/año)')
+        ax2.set_ylabel('$\mu_{\phi_2}$ ("/año)')
         ax2.set_xlim([-20,15])
         ax2.set_ylim([-2.5,2.5]);
 

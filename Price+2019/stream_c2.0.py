@@ -41,17 +41,18 @@ mu = np.array([mu1_mean, mu2_mean])
 sigma = np.array([[(e_mu1*10)**2, (cov_mu*100)], [(cov_mu*100), (e_mu2*10)**2]]) 
 
 
-#Para que funcione tengo que primero asignarle las variables globales al modulo probs
-probs.phi1 = phi1
-probs.y = y
-probs.C = C
-
 print('\nModelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
 ll_bgn, p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
 
+
+#Para que funcione tengo que primero asignarle las variables globales al modulo probs
+probs.phi1 = phi1
+probs.y = y
+probs.C = C
 probs.ll_bgn = ll_bgn
 probs.p_bgn = p_bgn
+
 
 print('MCMC')
 pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim) #Inicializo haciendo minimos cuadrados con las estrellas que ya se que son miembros segun PW2019
@@ -91,7 +92,7 @@ print('tau promedio: {}'.format(np.mean(tau)))
 flat_samples = sampler.get_chain(discard=0, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
 
-columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f"]
+columns = ["$a_{\mu_{\phi_1}}$", "$a_{\mu_{\phi_2}}$", "$a_d$", "$b_{\mu_{\phi_1}}$", "$b_{\mu_{\phi_2}}$", "$b_d$", "$c_{\mu_{\phi_1}}$", "$c_{\mu_{\phi_2}}$", "$c_d$", "$x_{\mu_{\phi_1}}$", "$x_{\mu_{\phi_2}}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
 
 
@@ -103,9 +104,9 @@ fig6.savefig('corner_plot.png')
 print('Guardando muestras \n')
 
 ##Guardo las posteriors
-post = sampler.get_log_prob(discard=0, thin=thin, flat=True)
+ln_post = sampler.get_log_prob(discard=0, thin=thin, flat=True)
 
-theta_post['Posterior'] = post
+theta_post['ln_posterior'] = ln_post
 theta_post.to_csv('theta_post.csv', index=False)
 
 

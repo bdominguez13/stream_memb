@@ -42,9 +42,10 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
     e_prma_out, e_pmdec_out, e_d_out: Errores en movimientos propios en ar y dec y distancias de las estrellas fuera del track
     
     Outputs:
+    ll_bgn: Ln probabilidad de que una estrella pertenezca al backgroud
     p_bgn: Probabilidad de que una estrella pertenezca al backgroud
     gmm_best: Modelo de GMM para el mejor numero de gaussinas segun el XD (si do_bg_model == 'yes')
-    BIC: Array del BIC para los diferentes numeros de gaussianas segun el XD (si do_bg_model == 'yes')
+    BIC_xd: Array del BIC para los diferentes numeros de gaussianas segun el XD (si do_bg_model == 'yes')
     """
     if do_bg_model == 'yes':
 
@@ -55,30 +56,29 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         diag = np.arange(X.shape[-1])
         Xerr[:, diag, diag] = np.vstack([e_pmra_out**2, e_pmdec_out**2, e_d_out**2]).T
 
-        #N = np.arange(3,13) #Con 1 gaussiana da error
-        #N = np.arange(6,7)
+        #Con N=1 gaussiana da error
         models = compute_XDGMM(N, X, Xerr)
         models_gmm = compute_GaussianMixture(N, X)
 
-        BIC = [None for n in N]
+        BIC_xd = [None for n in N]
         BIC_gmm2 = [None for n in N]
         for i in range(len(N)):
             k = (N[i]-1) + np.tri(X.shape[1]).sum()*N[i] + X.shape[1]*N[i] #N_componentes = Pesos + covariaza(matiz simetrica) + medias
-            BIC[i] = -2*models[i].logL(X,Xerr) + k*np.log(X.shape[0])
+            BIC_xd[i] = -2*models[i].logL(X,Xerr) + k*np.log(X.shape[0])
             BIC_gmm2[i] = -2*np.sum(models_gmm[i].score_samples(X)) + k*np.log(X.shape[0])
         BIC_gmm = [m.bic(X) for m in models_gmm]
 
-        i_best = np.argmin(BIC)
+        i_best_xd = np.argmin(BIC_xd)
         i_best_gmm = np.argmin(BIC_gmm)
 
-        xdgmm_best = models[i_best]
-        gmm_best = models_gmm[i_best] #Me quedo con el mejor modelo de gmm segun xd
+        xdgmm_best = models[i_best_xd]
+        gmm_best = models_gmm[i_best_xd] #Me quedo con el mejor modelo de gmm segun xd
         
         if printBIC == 'yes':
             fig4=plt.figure(4,figsize=(8,6))
             fig4.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.14,left=0.19,right=0.97)
             ax4=fig4.add_subplot(111)
-            ax4.plot(N, np.array(BIC)/X.shape[0], '--k', marker='o', lw=2, ms=6, label='BIC$_{xd}$/N')
+            ax4.plot(N, np.array(BIC_xd)/X.shape[0], '--k', marker='o', lw=2, ms=6, label='BIC$_{xd}$/N')
             #ax4.plot(N, np.array(BIC_gmm)/X.shape[0], '--', c='red', marker='o', lw=2, ms=6, label='BIC$_{gmm}$/N')
             #ax4.plot(N, np.array(BIC_gmm2)/X.shape[0], '--', c='blue', marker='o', lw=1., ms=3, label='BIC2$_{gmm}$/N')
             ax4.legend()
@@ -132,7 +132,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
 
         fig5.savefig('bg_sample.png')
         
-        return ll_bgn, p_bgn, gmm_best, BIC
+        return ll_bgn, p_bgn, gmm_best, BIC_xd
 
     else:
         print('\nCargando ll_bgn y p_bgn \n')

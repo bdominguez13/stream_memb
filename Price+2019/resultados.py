@@ -1,7 +1,7 @@
 import numpy as np
 import probs
 
-def quantiles(x, flat_samples, q_min, q_max):
+def quantiles(x, flat_samples, q_min, q_max): #explota..
     """
     Funcion que devuelve los parametros de MAP, la mediana (percentil 50) y los percentiles q_min y q_max
     
@@ -15,10 +15,10 @@ def quantiles(x, flat_samples, q_min, q_max):
     quantiles_mu1, quantiles_mu2, quantiles_d: Puntos de grafico del modelo para los percentiles q_min, 50 y q_max para mu1, mu2 y distancia
     
     """
-    post = flat_samples[:, -1]
+    ln_post = flat_samples[:, -1]
     
-    MAP = max(post)
-    theta_max = flat_samples[np.argmax(post)]
+    MAP = max(ln_post)
+    theta_max = flat_samples[np.argmax(ln_post)]
     
     
     x = x*np.ones((flat_samples.shape[0], x.size))

@@ -4,20 +4,39 @@ from scipy.stats import norm
 
 
 #Defino log-likelihood del stream
-def lnlike_st(theta_st):
+
+# def lnlike_st_viejo(theta_st):
+#     """
+#     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
+#     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d 
+#     """
+#     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
+
+#     model_mu1 = a_mu1 + b_mu1*(phi1.value-x_mu1) + c_mu1*(phi1.value-x_mu1)**2
+#     model_mu2 = a_mu2 + b_mu2*(phi1.value-x_mu2) + c_mu2*(phi1.value-x_mu2)**2
+#     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
+#     model = np.array([model_mu1, model_mu2, model_d])
+
+#     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
+
+
+def lnlike_st(theta):
     """
     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d 
     """
-    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
+    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, _ = theta
 
     model_mu1 = a_mu1 + b_mu1*(phi1.value-x_mu1) + c_mu1*(phi1.value-x_mu1)**2
     model_mu2 = a_mu2 + b_mu2*(phi1.value-x_mu2) + c_mu2*(phi1.value-x_mu2)**2
     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
     model = np.array([model_mu1, model_mu2, model_d])
-
-    return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
-
+    
+    ll_st = np.zeros(phi1.size)
+    for i in range(phi1.size):
+        ll_st[i] = multivariate_normal.logpdf(y.T[i], mean=model.T[i], cov=C_tot[i])
+    
+    return ll_st
 
 #Defino log-likelihood 
 def ln_likelihood(theta):
@@ -27,9 +46,9 @@ def ln_likelihood(theta):
     theta = theta_st, f
     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
     """
-    theta_st = theta[0:12]
+    # theta_st = theta[0:12]
     f = theta[12]
-    arg1 = np.log(f) + lnlike_st(theta_st)
+    arg1 = np.log(f) + lnlike_st(theta)
     arg2 = np.log(1.-f) + ll_bgn
     # return np.sum(np.log( f * np.exp(lnlike_st(theta_st)) + (1-f) * p_bgn))
     return np.sum(np.logaddexp(arg1, arg2)), arg1, arg2
@@ -92,7 +111,7 @@ def ln_prior2(theta, mu, sigma, d_mean, e_dd, lim_unif):
     return lp_a12 + lp_ad + lp_b1 + lp_b2 + lp_bd + lp_c1 + lp_c2 + lp_cd + lp_x1 + lp_x2 + lp_xd + lp_f
 
 
-def ln_prior(theta, mu, sigma, d_mean, e_dd, lim_unif):
+def ln_prior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
     """ln prior de los parametros del modelo (theta_st) y el peso f
     
     Inputs:
@@ -143,7 +162,7 @@ def prior_sample(mu, sigma, d_mean, e_dd, lim_unif, n):
 
 
 #Defino posterior
-def ln_posterior(theta, mu, sigma, d_mean, e_dd, lim_unif):
+def ln_posterior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
     """ Devuelve ln posterior, y el ln likelihood de la corriente por su peso (ln(f) + ln_st) y el ln likelihhod del fondo por su peso (ln(1-f) + ll_pbgn) en forma de tupla
     
     Inputs:
@@ -157,7 +176,7 @@ def ln_posterior(theta, mu, sigma, d_mean, e_dd, lim_unif):
     ln posterior de las estrellas
     Tupla con el ln likelihood de la corriente por su peso (ln(f) + ln_st) en la primera entrada y el ln likelihood del fondo por su peso (ln(1-f) + ll_bgn) en la segunda entrada
     """
-    lp = ln_prior(theta, mu, sigma, d_mean, e_dd, lim_unif)
+    lp = ln_prior(theta)#, mu, sigma, d_mean, e_dd, lim_unif)
     ll, arg1, arg2 = ln_likelihood(theta)
     if not np.isfinite(lp):
         return -np.inf, None

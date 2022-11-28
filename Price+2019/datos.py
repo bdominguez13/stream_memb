@@ -14,7 +14,7 @@ import gala.coordinates as gc
 import galstreams
 
 
-def datos(tabla, st, printTrack, d_inf, d_sup):
+def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     """
     Funcion que devuelve la posicion, movimientos propios y distancia de las estrellas y del track en el frame de la corriente, y los movimientos propios en ar y dec y distancia de las estrellas por fuera del track junto a sus errores
     
@@ -65,7 +65,8 @@ def datos(tabla, st, printTrack, d_inf, d_sup):
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'] #kpc 
+    d = data['Dist'] #kpc
+    e_d = d*0.03 #kpc
     
     #Seleciono estrellas fuera del track
     ra = data['RA_ICRS'] #deg
@@ -96,6 +97,23 @@ def datos(tabla, st, printTrack, d_inf, d_sup):
     d_out = d[off]
     e_d_out = d_out*0.03
     
+    #Matriz de covarianza de las estrellas intrinsica+observacional
+    C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza intrinseca: Fija para todas las estrellas
+    
+    C_pm = [None for n in range(len(e_pmra))]  
+    for i in range(len(e_pmra)):
+        C_pm[i] = np.array([[e_pmra[i]**2,0],[0,e_pmdec[i]**2]])
+
+    C_pm = np.array(C_pm)
+    C_pm = gc.transform_pm_cov(c, C_pm, mwsts[st].stream_frame) #Transformo matriz cov de pm al frame del stream
+
+    C_obs = [None for n in range(len(e_pmra))] #Matriz de covarianza observacional en el frame del stream
+    for i in range(len(e_pmra)):
+        C_obs[i] = np.zeros((3,3))
+        C_obs[i][:2,:2] = C_pm[i]
+        C_obs[i][2,2] = e_d[i]**2
+
+    C_tot = C_int + C_obs
     
     #Estrellas del track y del fondo
     d_in = (data['Dist']>d_inf) & (data['Dist']<d_sup)
@@ -186,5 +204,5 @@ def datos(tabla, st, printTrack, d_inf, d_sup):
         fig2.savefig('track_memb.png')
         # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint
+    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint
 

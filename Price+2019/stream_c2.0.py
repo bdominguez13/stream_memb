@@ -27,19 +27,19 @@ print('Inicio: ', Start, '\n')
 
 tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, footprint = datos.datos(tabla, st, printTrack, d_inf, d_sup)
+data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint = datos.datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup)
 
 
 miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
 
 #Parametros de la corriente
 y = np.array([pmphi1.value, pmphi2.value, d])
-C = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza: Fija para todas las estrellas
+# C = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza: Fija para todas las estrellas
 
 #Parametros para el prior gaussiano de los movimientos propios en el frame de la corriente
 mu = np.array([mu1_mean, mu2_mean])
 sigma = np.array([[(e_mu1*10)**2, (cov_mu*100)], [(cov_mu*100), (e_mu2*10)**2]]) 
-
+e_dd = e_dd*5
 
 print('\nModelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
@@ -49,9 +49,15 @@ ll_bgn, p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec
 #Para que funcione tengo que primero asignarle las variables globales al modulo probs
 probs.phi1 = phi1
 probs.y = y
-probs.C = C
+probs.C_tot = C_tot
 probs.ll_bgn = ll_bgn
 probs.p_bgn = p_bgn
+
+probs.mu = mu
+probs.sigma = sigma
+probs.d_mean = d_mean
+probs.e_dd = e_dd
+probs.lim_unif = lim_unif
 
 
 print('MCMC')
@@ -75,7 +81,7 @@ print("{0} CPUs".format(ncpu))
 #NCPU RUN
 dtype = [("(arg1, arg2)", object)]
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, args=(mu, sigma, d_mean, e_dd, lim_unif), pool=pool, blobs_dtype=dtype)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, probs.ln_posterior, pool=pool, blobs_dtype=dtype)#, args=(mu, sigma, d_mean, e_dd, lim_unif))
     start = time.time()
     pos, _, _, _ = sampler.run_mcmc(pos0, burn_in, progress=True)
     sampler.reset()

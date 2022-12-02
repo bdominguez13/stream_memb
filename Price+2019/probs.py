@@ -32,9 +32,7 @@ def lnlike_st(theta):
     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
     model = np.array([model_mu1, model_mu2, model_d])
     
-    ll_st = np.zeros(phi1.size)
-    for i in range(phi1.size):
-        ll_st[i] = multivariate_normal.logpdf(y.T[i], mean=model.T[i], cov=C_tot[i])
+    ll_st = np.array([multivariate_normal.logpdf(y.T[i], mean=model.T[i], cov=C_tot[i]) for i in range(phi1.size)])
     
     return ll_st
 

@@ -91,9 +91,9 @@ with Pool() as pool:
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
 
     
-tau = sampler.get_autocorr_time()
-print('tau: ', tau)
-print('tau promedio: {}'.format(np.mean(tau)))
+# tau = sampler.get_autocorr_time()
+# print('tau: ', tau)
+# print('tau promedio: {}'.format(np.mean(tau)))
 
 flat_samples = sampler.get_chain(discard=0, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
@@ -101,8 +101,9 @@ print('Tamano muestra: {}'.format(flat_samples.shape))
 columns = ["$a_{\mu_{\phi_1}}$", "$a_{\mu_{\phi_2}}$", "$a_d$", "$b_{\mu_{\phi_1}}$", "$b_{\mu_{\phi_2}}$", "$b_d$", "$c_{\mu_{\phi_1}}$", "$c_{\mu_{\phi_2}}$", "$c_d$", "$x_{\mu_{\phi_1}}$", "$x_{\mu_{\phi_2}}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
 
+theta_true = np.array([3.740, 0.686, 22.022, 4.102e-2, -2.826e-2, 9.460e-3, -6.423e-4, 2.832e-3, -6.327e-3, -1.072, -10.954, -16.081, miembro_PW.sum()/phi1.value.size])
 
-fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25)
+fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25, truths=theta_true)
 fig6.subplots_adjust(bottom=0.05,left=0.05)
 fig6.savefig('corner_plot.png')
 
@@ -132,103 +133,132 @@ Memb.to_csv('memb_prob.csv', index=False)
 ### A partir de acá es posible que la computaddora se quede sin memoria, tengo que ver como optimizar los calculos. Igual antes de eso hay problemas mas graves que atender primero :|
 
 
+print('Guardando percentiles \n')
+#MAP, median y percentiles
+flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1)
 
-# print('Guardando percentiles \n')
-# #Maximum a Posterior, median y percentiles
-# flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1) 
+n = 500
+x = np.linspace(min(phi1.value), max(phi1.value), n)
+theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
 
-# n = 500
-# x = np.linspace(min(phi1.value), max(phi1.value), n)
-# theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
+#Median
+median_mu1 = init.model(x, theta_50[0], theta_50[3], theta_50[6], theta_50[9])
+median_mu2 = init.model(x, theta_50[1], theta_50[4], theta_50[7], theta_50[10])
+median_d = init.model(x, theta_50[2], theta_50[5], theta_50[8], theta_50[11])
 
-# median_mu1 = theta_50[0] + theta_50[3]*(x-theta_50[9]) + theta_50[6]*(x-theta_50[9])**2
-# median_mu2 = theta_50[1] + theta_50[4]*(x-theta_50[10]) + theta_50[7]*(x-theta_50[10])**2
-# median_d = theta_50[2] + theta_50[5]*(x-theta_50[11]) + theta_50[8]*(x-theta_50[11])**2
-
-# print('\nGuardando resultados \n')
-
-# theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
-# theta_resul.loc[0] = theta_max
-# theta_resul.loc[1] = theta_50
-# theta_resul.loc[2] = theta_qmin
-# theta_resul.loc[3] = theta_qmax
-# theta_resul.index = ['MAP','median','{}th'.format(q_min),'{}th'.format(q_max)]
-# theta_resul.to_csv('theta_resul.csv', index=True)
+#MAP
+y_mu1 = init.model(x, theta_max[0], theta_max[3], theta_max[6], theta_max[9])
+y_mu2 = init.model(x, theta_max[1], theta_max[4], theta_max[7], theta_max[10])
+y_d = init.model(x, theta_max[2], theta_max[5], theta_max[8], theta_max[11])
 
 
-# print('Graficando resultados')
+#Errores en mu1 y mu2
+C_obs = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]])
+C_int = C_tot - C_obs
 
-# # field = ac.SkyCoord(ra=data['RA_ICRS']*u.deg, dec=data['DE_ICRS']*u.deg, frame='icrs')
-# # footprint = mwsts[st].get_mask_in_poly_footprint(field)
-# inside = inside10
-# star = (inside50==True) & (footprint==True)
+e_pmphi1 = np.array([C_tot[i][0,0]**0.5 for i in range(len(phi1))])
+e_pmphi2 = np.array([C_tot[i][1,1]**0.5 for i in range(len(phi1))])
+e_d = d*0.03
 
-# print('Inside: ', inside.sum())
-# print('Stars: ', star.sum())
+print('\nGuardando resultados \n')
 
-# fig7=plt.figure(7,figsize=(12,8))
-# fig7.subplots_adjust(wspace=0.4,hspace=0.34,top=0.95,bottom=0.12,left=0.11,right=0.98)
+theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
+theta_resul.loc[0] = theta_max
+theta_resul.loc[1] = theta_50
+theta_resul.loc[2] = theta_qmin
+theta_resul.loc[3] = theta_qmax
+theta_resul.index = ['MAP','median','{}th'.format(q_min),'{}th'.format(q_max)]
+theta_resul.to_csv('theta_resul.csv', index=True)
 
-# ax7=fig7.add_subplot(221)
-# ax7.plot(phi1, phi2,'.', c='gray', ms=1.)
-# m = ax7.scatter(phi1[inside], phi2[inside], s=10, c=memb[inside], cmap='Blues')
+
+print('Graficando resultados')
+
+inside = inside10
+star = (inside50==True) & (footprint==True)
+
+print('Inside: ', inside.sum())
+print('Stars: ', star.sum())
+
+fig7=plt.figure(7,figsize=(15,10))
+fig7.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.25,left=0.09,right=0.98)
+
+ax7=fig7.add_subplot(221)
+ax7.scatter(phi1[~inside], phi2[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+# for i in range(len(phi1[inside])):
+#     ax7.annotate("", xy=(phi1.value[inside][i]+pmphi1.value[inside][i]*0.3, phi2.value[inside][i]+pmphi2.value[inside][i]*0.3), xytext=(phi1.value[inside][i], phi2.value[inside][i]), arrowprops=dict(arrowstyle="->", color='lightgray'))
+m = ax7.scatter(phi1[inside], phi2[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
-# ax7.plot(phi1_t,phi2_t,'k.',ms=0.5)
+ax7.plot(phi1_t,phi2_t,'k.',ms=0.5, zorder=0)
 # ax7.plot(phi1[miembro_PW], phi2[miembro_PW],'*', c='black',ms=10., label='Price-Whelan')
-# ax7.plot(phi1[star], phi2[star],'*',c='red', ms=10., label='Yo')
-# # ax7.set_xlabel('$\phi_1$ (°)')
-# ax7.set_ylabel('$\phi_2$ (°)')
-# ax7.set_xlim([-20,15])
-# ax7.set_ylim([-3,5])
+ax7.scatter(phi1[star], phi2[star], s=150., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
+# ax7.set_xlabel('$\phi_1$ (°)')
+ax7.set_ylabel('$\phi_2$ (°)')
+ax7.set_xlim([-20,15])
+ax7.set_ylim([-3,5])
 
-# ax7=fig7.add_subplot(222)
-# ax7.plot(phi1, d,'.', c='gray', ms=1.)
-# m = ax7.scatter(phi1[inside], d[inside], s=10, c=memb[inside], cmap='Blues')
+
+ax7=fig7.add_subplot(222)
+ax7.scatter(phi1[~inside], d[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside], y=d[inside], yerr=e_d[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside], d[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
-# ax7.plot(x, quantiles_d[1], color="orangered")
-# ax7.plot(x, median_d, color="red")
-# ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.5)
+ax7.plot(x, quantiles_d[1], color="orangered", lw=2, label='Median', zorder=0)
+ax7.plot(x, y_d, lw=2, color="blue", label='MAP', zorder=1)
+ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
 # ax7.plot(phi1[miembro_PW], d[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
-# ax7.plot(phi1[star], d[star],'*', c='red', ms=10., label='Yo')
-# # ax7.plot(x,true_d,'k-',lw=1.5)
-# # ax7.set_xlabel('$\phi_1$ (°)')
-# ax7.set_ylabel('$d$ (kpc)')
-# ax7.set_xlim([-20,15])
-# ax7.set_ylim([13,25])
-
-# ax7=fig7.add_subplot(223)
-# ax7.plot(phi1,pmphi1,'.', c='gray', ms=1.)
-# m = ax7.scatter(phi1[inside],pmphi1[inside], s=10, c=memb[inside], cmap='Blues')
-# cb = plt.colorbar(m)
-# ax7.plot(x, quantiles_mu1[1], color="orangered")
-# ax7.plot(x, median_mu1, color="red")
-# ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.5)
-# ax7.plot(phi1[miembro_PW],pmphi1[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
-# ax7.plot(phi1[star],pmphi1[star],'*',c='red',ms=10.,label='Yo')
-# # ax7.plot(x,true_mu1,'k-', lw=1.5)
+ax7.scatter(phi1[star], d[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
+# ax7.plot(x,true_d,'k-',lw=1.5)
 # ax7.set_xlabel('$\phi_1$ (°)')
-# ax7.set_ylabel('$\mu_1$ ("/año)')
-# ax7.set_xlim([-20,15])
-# ax7.set_ylim([1,6])
+ax7.set_ylabel('$d$ (kpc)')
+ax7.set_xlim([-20,15])
+ax7.set_ylim([13,25])
 
-# ax7=fig7.add_subplot(224)
-# ax7.plot(phi1,pmphi2,'.', c='gray', ms=1.)
-# m = ax7.scatter(phi1[inside],pmphi2[inside], s=10, c=memb[inside], cmap='Blues')
+
+ax7=fig7.add_subplot(223)
+ax7.scatter(phi1[~inside], pmphi1[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside], y=pmphi1.value[inside], yerr=e_pmphi1[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside], pmphi1[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
-# ax7.plot(x, quantiles_mu2[1], color="orangered")
-# ax7.plot(x, median_mu2, color="red")
-# ax7.fill_between(x, quantiles_mu2[0], quantiles_mu2[2], color="orange", alpha=0.5)
-# ax7.plot(phi1[miembro_PW],pmphi2[miembro_PW],'*',c='black',ms=10., label='Price-Whelan')
-# ax7.plot(phi1[star],pmphi2[star],'*',c='red',ms=10.,label='Yo')
-# # ax7.plot(x,true_mu2,'k-',lw=1.5)
-# ax7.set_xlabel('$\phi_1$ (°)')
-# ax7.set_ylabel('$\mu_2$ ("/año)');
-# ax7.set_xlim([-20,15])
-# ax7.set_ylim([-2.5,2.5]);
+ax7.plot(x, quantiles_mu1[1], color="orangered", lw=2, label='Median', zorder=0)
+ax7.plot(x, y_mu1, lw=2, color="blue", label='MAP', zorder=1)
+ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
+# ax7.plot(phi1[miembro_PW], pmphi1[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+ax7.scatter(phi1[star], pmphi1[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
+# ax7.plot(x,true_mu1,'k-',lw=1.5)
+ax7.set_xlabel('$\phi_1$ (°)')
+ax7.set_ylabel('$\mu_{\phi_1}$ ("/año)')
+ax7.set_xlim([-20,15])
+ax7.set_ylim([1,6])
 
-# fig7.savefig('resultados.png')
+
+ax7=fig7.add_subplot(224)
+ax7.scatter(phi1[~inside], pmphi2[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside], y=pmphi2.value[inside], yerr=e_pmphi2[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside], pmphi2[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+# cb = plt.colorbar(m)
+ax7.plot(x, quantiles_mu2[1], color="orangered", lw=2, label='Median', zorder=0)
+ax7.plot(x, y_mu2, lw=2, color="blue", label='MAP', zorder=1)
+ax7.fill_between(x, quantiles_mu2[0], quantiles_mu1[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
+# ax7.plot(phi1[miembro_PW], pmphi2[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+ax7.scatter(phi1[star], pmphi2[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
+# ax7.plot(x,true_mu2,'k-',lw=1.5)
+ax7.set_xlabel('$\phi_1$ (°)')
+ax7.set_ylabel('$\mu_{\phi_2}$ ("/año)');
+ax7.set_xlim([-20,15])
+ax7.set_ylim([-2.5,2.5]);
+
+cb_ax = fig7.add_axes([.15, 0.095, 0.7, 0.02])
+cbar = fig7.colorbar(m, cax=cb_ax, ax=ax7, orientation='horizontal', label='probabilidad de membresía')
+
+fig7.savefig('resultados.png')
+
 
 
 End = datetime.datetime.now()
 print('Final: ', End, '\n')
 
+
+#Lo dejo para el final xq muchas veces da error por ser poco el largo de los datos..
+tau = sampler.get_autocorr_time()
+print('tau: ', tau)
+print('tau promedio: {}'.format(np.mean(tau)))

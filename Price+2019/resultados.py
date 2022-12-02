@@ -48,15 +48,15 @@ def quantiles(x, flat_samples, q_min, q_max): #explota..
     quantiles_d = np.percentile(model_d, [q_min, 50, q_max], axis=0)
     
     
-    p_50 = np.percentile(post, 50)
-    i_50 = abs(post-p_50).argmin()
+    p_50 = np.percentile(ln_post, 50)
+    i_50 = abs(ln_post-p_50).argmin()
     theta_50 = flat_samples[i_50]
 
     #Percentiles q_min y q_max
-    p_qmin = np.percentile(post, q_min)
-    p_qmax = np.percentile(post, q_max)
-    i_qmin = abs(post-p_qmin).argmin()
-    i_qmax = abs(post-p_qmax).argmin()
+    p_qmin = np.percentile(ln_post, q_min)
+    p_qmax = np.percentile(ln_post, q_max)
+    i_qmin = abs(ln_post-p_qmin).argmin()
+    i_qmax = abs(ln_post-p_qmax).argmin()
 
     theta_qmin = flat_samples[i_qmin]
     theta_qmax = flat_samples[i_qmax]

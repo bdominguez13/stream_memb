@@ -1,7 +1,7 @@
 import numpy as np
 import probs
 
-def quantiles(x, flat_samples, q_min, q_max): #explota..
+def quantiles(x, flat_samples, q_min, q_max):
     """
     Funcion que devuelve los parametros de MAP, la mediana (percentil 50) y los percentiles q_min y q_max
     

@@ -18,7 +18,9 @@ def init_prior(mu, sigma, d_mean, e_dd, lim_unif, nwalkers, ndim):
     Output
     pos0: Posiciones iniciales de los ndim parametros y nwalker caminadores a partir de los priors
     """
-    pos0 = prior_sample(mu, sigma, d_mean, e_dd, lim_unif, nwalkers) + 1e-4*np.random.randn(nwalkers, ndim) #ndim parametros iniciales
+    
+    pos0 = init + 1e-4*np.random.randn(nwalkers, ndim) #ndim parametros iniciales
+    
     return pos0
 
 
@@ -47,6 +49,7 @@ def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
     
     Output: 
     pos0: Posiciones iniciales de los ndim parametros y nwalker caminadores a partir de resolver minimos cuadrados para las estrellas que cumplan la mascara [miembro]
+    init: Valores iniciales dados por minimos cuadrados
     """
     params_mu1, _ = curve_fit(model, phi1.value[miembro], pmphi1.value[miembro])
     params_mu2, _ = curve_fit(model, phi1.value[miembro], pmphi2.value[miembro])
@@ -57,4 +60,4 @@ def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
 
     print('Valores iniciales: ', init)
     
-    return pos0
+    return pos0, init

@@ -61,7 +61,7 @@ probs.lim_unif = lim_unif
 
 
 print('MCMC')
-pos0 = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim) #Inicializo haciendo minimos cuadrados con las estrellas que ya se que son miembros segun PW2019
+pos0, _ = init.init_ls(phi1, pmphi1, pmphi2, d, miembro_PW, nwalkers, ndim) #Inicializo haciendo minimos cuadrados con las estrellas que ya se que son miembros segun PW2019
 
 
 #SERIAL RUN
@@ -135,13 +135,13 @@ Memb.to_csv('memb_prob.csv', index=False)
 
 print('Guardando percentiles \n')
 #MAP, median y percentiles
-flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(post), axis=1)
+flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(ln_post), axis=1)
 
 n = 500
 x = np.linspace(min(phi1.value), max(phi1.value), n)
 theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
 
-#Median
+#Median --> No lo uso, puede dar fruta: Si la distribución es prefectamente bimodal, la mediana tiene probabilidad ~0
 median_mu1 = init.model(x, theta_50[0], theta_50[3], theta_50[6], theta_50[9])
 median_mu2 = init.model(x, theta_50[1], theta_50[4], theta_50[7], theta_50[10])
 median_d = init.model(x, theta_50[2], theta_50[5], theta_50[8], theta_50[11])

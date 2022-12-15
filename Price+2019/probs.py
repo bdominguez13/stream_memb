@@ -23,6 +23,9 @@ from scipy.stats import norm
 def lnlike_st(theta):
     """
     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
+    
+    Input:
+    theta = theta_st, f
     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d 
     """
     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, _ = theta
@@ -115,6 +118,8 @@ def ln_prior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
     Inputs:
     theta = theta_st, f
     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    
+    Global variables:
     mu, sigma: Medias y matriz de covarianza para a_mu1 y a_mu2
     d_mean, e_dd: Media y varianza para a_d
     lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
@@ -166,6 +171,8 @@ def ln_posterior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
     Inputs:
     theta = theta_st, f
     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    
+    Global variables:
     mu, sigma: Mmedias y matriz de covarianza para a_mu1 y a_mu2
     d_mean, e_dd: Media y varianza para a_d
     lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d

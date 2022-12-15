@@ -27,7 +27,7 @@ print('Inicio: ', Start, '\n')
 
 tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint = datos.datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup)
+data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint = datos.datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup)
 
 
 miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
@@ -85,7 +85,7 @@ with Pool() as pool:
     start = time.time()
     pos, _, _, _ = sampler.run_mcmc(pos0, burn_in, progress=True)
     sampler.reset()
-    sampler.run_mcmc(pos, steps, progress=True)
+    pos_final, _, _, _ = sampler.run_mcmc(pos, steps, progress=True)
     end = time.time()
     multi_time = end-start 
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
@@ -95,18 +95,13 @@ with Pool() as pool:
 # print('tau: ', tau)
 # print('tau promedio: {}'.format(np.mean(tau)))
 
+# np.save('pos_final.npy', pos_final)
+
 flat_samples = sampler.get_chain(discard=0, thin=thin, flat=True)
 print('Tamano muestra: {}'.format(flat_samples.shape))
 
 columns = ["$a_{\mu_{\phi_1}}$", "$a_{\mu_{\phi_2}}$", "$a_d$", "$b_{\mu_{\phi_1}}$", "$b_{\mu_{\phi_2}}$", "$b_d$", "$c_{\mu_{\phi_1}}$", "$c_{\mu_{\phi_2}}$", "$c_d$", "$x_{\mu_{\phi_1}}$", "$x_{\mu_{\phi_2}}$", "$x_d$", "f"]
 theta_post = pd.DataFrame(flat_samples, columns=columns)
-
-theta_true = np.array([3.740, 0.686, 22.022, 4.102e-2, -2.826e-2, 9.460e-3, -6.423e-4, 2.832e-3, -6.327e-3, -1.072, -10.954, -16.081, miembro_PW.sum()/phi1.value.size])
-
-fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25, truths=theta_true)
-fig6.subplots_adjust(bottom=0.05,left=0.05)
-fig6.savefig('corner_plot.png')
-
 
 print('Guardando muestras \n')
 
@@ -141,6 +136,16 @@ n = 500
 x = np.linspace(min(phi1.value), max(phi1.value), n)
 theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d = resultados.quantiles(x, flat_samples, q_min, q_max)
 
+
+theta_true = np.array([3.740, 0.686, 22.022, 4.102e-2, -2.826e-2, 9.460e-3, -6.423e-4, 2.832e-3, -6.327e-3, -1.072, -10.954, -16.081, miembro_PW.sum()/phi1.value.size])
+
+fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25, truths=theta_true)
+corner.overplot_lines(fig6, theta_max[0:ndim], color="C1")
+corner.overplot_points(fig6, theta_max[0:ndim][None], marker="s", color="C1")
+fig6.subplots_adjust(bottom=0.05,left=0.05)
+fig6.savefig('corner_plot.png')
+
+
 #Median --> No lo uso, puede dar fruta: Si la distribución es prefectamente bimodal, la mediana tiene probabilidad ~0
 median_mu1 = init.model(x, theta_50[0], theta_50[3], theta_50[6], theta_50[9])
 median_mu2 = init.model(x, theta_50[1], theta_50[4], theta_50[7], theta_50[10])
@@ -156,8 +161,8 @@ y_d = init.model(x, theta_max[2], theta_max[5], theta_max[8], theta_max[11])
 C_obs = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]])
 C_int = C_tot - C_obs
 
-e_pmphi1 = np.array([C_tot[i][0,0]**0.5 for i in range(len(phi1))])
-e_pmphi2 = np.array([C_tot[i][1,1]**0.5 for i in range(len(phi1))])
+e_pmphi1 = np.array([C_int[i][0,0]**0.5 for i in range(len(phi1))])
+e_pmphi2 = np.array([C_int[i][1,1]**0.5 for i in range(len(phi1))])
 e_d = d*0.03
 
 print('\nGuardando resultados \n')
@@ -176,55 +181,55 @@ print('Graficando resultados')
 inside = inside10
 star = (inside50==True) & (footprint==True)
 
+xy_mask = (phi1.value>=-20.) & (phi1.value<=15.) & (phi2.value>=-3.) & (phi2.value<=5.)
+
 print('Inside: ', inside.sum())
 print('Stars: ', star.sum())
+
 
 fig7=plt.figure(7,figsize=(15,10))
 fig7.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.25,left=0.09,right=0.98)
 
 ax7=fig7.add_subplot(221)
 ax7.scatter(phi1[~inside], phi2[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
-# for i in range(len(phi1[inside])):
-#     ax7.annotate("", xy=(phi1.value[inside][i]+pmphi1.value[inside][i]*0.3, phi2.value[inside][i]+pmphi2.value[inside][i]*0.3), xytext=(phi1.value[inside][i], phi2.value[inside][i]), arrowprops=dict(arrowstyle="->", color='lightgray'))
+ax7.quiver(phi1.value[inside], phi2.value[inside], pmphi1_reflex.value[inside], pmphi2_reflex.value[inside], color='gray', width=0.003, headwidth=5, headlength=6.5, headaxislength=4, alpha=.5, scale=30)
 m = ax7.scatter(phi1[inside], phi2[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
 ax7.plot(phi1_t,phi2_t,'k.',ms=0.5, zorder=0)
-# ax7.plot(phi1[miembro_PW], phi2[miembro_PW],'*', c='black',ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW], phi2[miembro_PW],'.', c='black', ms=3., label='PW19')#, alpha=0.4)
 ax7.scatter(phi1[star], phi2[star], s=150., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
-# ax7.set_xlabel('$\phi_1$ (°)')
 ax7.set_ylabel('$\phi_2$ (°)')
 ax7.set_xlim([-20,15])
 ax7.set_ylim([-3,5])
 
 
 ax7=fig7.add_subplot(222)
-ax7.scatter(phi1[~inside], d[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
-ax7.errorbar(x=phi1[inside], y=d[inside], yerr=e_d[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
-m = ax7.scatter(phi1[inside], d[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.scatter(phi1[~inside & xy_mask], d[~inside & xy_mask], s=2, c=memb[~inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside & xy_mask], y=d[inside & xy_mask], yerr=e_d[inside & xy_mask], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside & xy_mask], d[inside & xy_mask], s=20, c=memb[inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
 ax7.plot(x, quantiles_d[1], color="orangered", lw=2, label='Median', zorder=0)
 ax7.plot(x, y_d, lw=2, color="blue", label='MAP', zorder=1)
+ax7.plot(x, true_d, lw=1, color="black", label='PW19', zorder=2)
 ax7.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
-# ax7.plot(phi1[miembro_PW], d[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW], d[miembro_PW],'.', c='black', ms=3., label='PW19')#, alpha=0.4)
 ax7.scatter(phi1[star], d[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
-# ax7.plot(x,true_d,'k-',lw=1.5)
-# ax7.set_xlabel('$\phi_1$ (°)')
 ax7.set_ylabel('$d$ (kpc)')
 ax7.set_xlim([-20,15])
 ax7.set_ylim([13,25])
 
 
 ax7=fig7.add_subplot(223)
-ax7.scatter(phi1[~inside], pmphi1[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
-ax7.errorbar(x=phi1[inside], y=pmphi1.value[inside], yerr=e_pmphi1[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
-m = ax7.scatter(phi1[inside], pmphi1[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.scatter(phi1[~inside & xy_mask], pmphi1[~inside & xy_mask], s=2, c=memb[~inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside & xy_mask], y=pmphi1.value[inside & xy_mask], yerr=e_pmphi1[inside & xy_mask], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside & xy_mask], pmphi1[inside & xy_mask], s=20, c=memb[inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
 ax7.plot(x, quantiles_mu1[1], color="orangered", lw=2, label='Median', zorder=0)
 ax7.plot(x, y_mu1, lw=2, color="blue", label='MAP', zorder=1)
+ax7.plot(x, true_mu1, lw=1, color="black", label='PW19', zorder=2)
 ax7.fill_between(x, quantiles_mu1[0], quantiles_mu1[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
-# ax7.plot(phi1[miembro_PW], pmphi1[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW], pmphi1[miembro_PW],'.', c='black', ms=3., label='PW19')#, alpha=0.4)
 ax7.scatter(phi1[star], pmphi1[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
-# ax7.plot(x,true_mu1,'k-',lw=1.5)
 ax7.set_xlabel('$\phi_1$ (°)')
 ax7.set_ylabel('$\mu_{\phi_1}$ ("/año)')
 ax7.set_xlim([-20,15])
@@ -232,16 +237,16 @@ ax7.set_ylim([1,6])
 
 
 ax7=fig7.add_subplot(224)
-ax7.scatter(phi1[~inside], pmphi2[~inside], s=2, c=memb[~inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
-ax7.errorbar(x=phi1[inside], y=pmphi2.value[inside], yerr=e_pmphi2[inside], lw=0, elinewidth=1, color='lightgray', zorder=0)
-m = ax7.scatter(phi1[inside], pmphi2[inside], s=20, c=memb[inside], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.scatter(phi1[~inside & xy_mask], pmphi2[~inside & xy_mask], s=2, c=memb[~inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
+ax7.errorbar(x=phi1[inside & xy_mask], y=pmphi2.value[inside & xy_mask], yerr=e_pmphi2[inside & xy_mask], lw=0, elinewidth=1, color='lightgray', zorder=0)
+m = ax7.scatter(phi1[inside & xy_mask], pmphi2[inside & xy_mask], s=20, c=memb[inside & xy_mask], cmap='YlGnBu', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1.)
 # cb = plt.colorbar(m)
 ax7.plot(x, quantiles_mu2[1], color="orangered", lw=2, label='Median', zorder=0)
 ax7.plot(x, y_mu2, lw=2, color="blue", label='MAP', zorder=1)
+ax7.plot(x, true_mu2, lw=1, color="black", label='PW19', zorder=2)
 ax7.fill_between(x, quantiles_mu2[0], quantiles_mu1[2], color="orange", alpha=0.3, label='$5^{th}-95^{th}$')
-# ax7.plot(phi1[miembro_PW], pmphi2[miembro_PW],'*',c='black', ms=10., label='Price-Whelan')
+ax7.plot(phi1[miembro_PW], pmphi2[miembro_PW],'.', c='black', ms=3., label='PW19')#, alpha=0.4)
 ax7.scatter(phi1[star], pmphi2[star], s=200., c=memb[star], cmap='YlGnBu', marker='*', edgecolors='gray', linewidths=0.5, vmin=0., vmax=1., label='Members')
-# ax7.plot(x,true_mu2,'k-',lw=1.5)
 ax7.set_xlabel('$\phi_1$ (°)')
 ax7.set_ylabel('$\mu_{\phi_2}$ ("/año)');
 ax7.set_xlim([-20,15])

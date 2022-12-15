@@ -64,7 +64,7 @@ def quantiles(x, flat_samples, q_min, q_max):
     return theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d
 
 
-def flat_blobs(flat_samples, ll_bgn):
+def flat_blobs(flat_samples, ll_bgn, ndim):
     """
     A partir de la cadena achatada devuelta por el MCMC y el ln_like del fondo (ll_bgn), devuelve los argumentos para calcular el likelihood total (arg1, arg2) en forma de una lista de tuplas:
     arg1 = np.log(f) + lnlike_st(theta_st)
@@ -73,7 +73,7 @@ def flat_blobs(flat_samples, ll_bgn):
     probs.ll_bgn = ll_bgn
     arg1, arg2 = [None for n in range(flat_samples.shape[0])], [None for n in range(flat_samples.shape[0])]
     for i in range(flat_samples.shape[0]):
-        theta = flat_samples[i,0:13]
+        theta = flat_samples[i,0:ndim]
         _, arg1[i], arg2[i] = probs.ln_likelihood(theta)
     
     return (arg1, arg2)
@@ -91,6 +91,25 @@ def memb(phi1, flat_blobs):
     post_prob = np.zeros(len(phi1))
     for i in range(len(flat_blobs)):
         ll_st, ll_bg = flat_blobs[i][0][0], flat_blobs[i][0][1]
+        post_prob += np.exp(ll_st - np.logaddexp(ll_st, ll_bg))
+        norm += 1
+    post_prob /= norm
+    
+    return post_prob
+
+
+def memb_cont(phi1, flat_blobs):
+    """
+    Calculo de la probabilidad de membresia a la corriente para las estrellas de la muestra
+    
+    Inputs:
+    phi1: Posiciones horizontales de las estrellas en el frame de la corriente
+    flat_blobs: Tupla obtenida de flat_blobs, con el ln likelihood de la corriente por su peso (ln(f) + ln_st) en la primera entrada y el ln likelihhod del fondo por su peso (ln(1-f) + ll_bgn) en la segunda entrada
+    """
+    norm = 0.0
+    post_prob = np.zeros(len(phi1))
+    for i in range(len(flat_blobs)):
+        ll_st, ll_bg = flat_blobs[0][i], flat_blobs[1][i]
         post_prob += np.exp(ll_st - np.logaddexp(ll_st, ll_bg))
         norm += 1
     post_prob /= norm

@@ -1,7 +1,7 @@
 # from parametros import *
 import numpy as np
-import pylab as plt
 import scipy
+import pylab as plt
 import seaborn as sns
 sns.set(style="ticks", context="poster")
 
@@ -49,6 +49,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     ##Cargo track y transformo coordenadas
     mwsts = galstreams.MWStreams(verbose=False, implement_Off=False)
     track = mwsts[st].track
+    track = gc.reflex_correct(track)
     st_track = track.transform_to(mwsts[st].stream_frame)
     
     phi1_t = st_track.phi1
@@ -58,8 +59,11 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr)
+    c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, distance=data['Dist']*u.kpc, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA']))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
+    
+    c_reflex = gc.reflex_correct(c)
+    st_coord_reflex = c_reflex.transform_to(mwsts[st].stream_frame)
     
     phi1 = st_coord.phi1 #deg
     phi2 = st_coord.phi2 #deg
@@ -74,10 +78,13 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     dec = data['DE_ICRS'] #deg
     e_dec = data['e_DE_ICRS']/3600 #deg
     
-    pmra = data['pmRA'] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'] #mas/yr
     e_pmra = data['e_pmRA'] #mas/yr
-    pmdec = data['pmDE'] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'] #mas/yr
     e_pmdec = data['e_pmDE'] #mas/yr
+    
+    pmphi1_reflex = st_coord_reflex.pm_phi1_cosphi2 #mas/yr
+    pmphi2_reflex = st_coord_reflex.pm_phi2 #mas/yr
     
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
     #Select the field points inside the polygon footprint
@@ -204,5 +211,5 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
         fig2.savefig('track_memb.png')
         # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint
+    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint
 

@@ -70,8 +70,8 @@ flat_blobs = resultados.flat_blobs(np.concatenate((flat_samples, flat_samples_co
 print('Calculando membresías')
 memb_cont = resultados.memb_cont(phi1, flat_blobs)
 
-inside10 = memb > 0.1 
-inside50 = memb > 0.5
+inside10 = memb_cont > 0.1 
+inside50 = memb_cont > 0.5
 
 Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)

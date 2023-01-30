@@ -38,10 +38,10 @@ probs.e_dd = e_dd
 probs.lim_unif = lim_unif
 
 
-flat_samples = pd.read_csv('long_run/theta_post.csv').to_numpy()
+flat_samples = pd.read_csv('theta_post.csv').to_numpy()
 # memb = pd.read_csv('memb.csv').to_numpy()
 
-steps_cont = 2**19
+steps_cont = 2**17
 pos_cont = flat_samples[-nwalkers:, :ndim]
 
 dtype = [("(arg1, arg2)", object)]
@@ -73,5 +73,5 @@ memb_cont = resultados.memb_cont(phi1, flat_blobs)
 inside10 = memb_cont > 0.1 
 inside50 = memb_cont > 0.5
 
-Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
+Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb_cont,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)

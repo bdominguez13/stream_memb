@@ -139,7 +139,12 @@ theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quant
 
 theta_true = np.array([3.740, 0.686, 22.022, 4.102e-2, -2.826e-2, 9.460e-3, -6.423e-4, 2.832e-3, -6.327e-3, -1.072, -10.954, -16.081, miembro_PW.sum()/phi1.value.size])
 
-fig6 = corner.corner(flat_samples, labels=columns, labelpad=0.25, truths=theta_true)
+true_mu1 = init.model(x, theta_true[0], theta_true[3], theta_true[6], theta_true[9])
+true_mu2 = init.model(x, theta_true[1], theta_true[4], theta_true[7], theta_true[10])
+true_d = init.model(x, theta_true[2], theta_true[5], theta_true[8], theta_true[11])
+
+
+fig6 = corner.corner(flat_samples[:,:ndim], labels=columns, labelpad=0.25, truths=theta_true)
 corner.overplot_lines(fig6, theta_max[0:ndim], color="C1")
 corner.overplot_points(fig6, theta_max[0:ndim][None], marker="s", color="C1")
 fig6.subplots_adjust(bottom=0.05,left=0.05)
@@ -256,6 +261,22 @@ cb_ax = fig7.add_axes([.15, 0.095, 0.7, 0.02])
 cbar = fig7.colorbar(m, cax=cb_ax, ax=ax7, orientation='horizontal', label='probabilidad de membresía')
 
 fig7.savefig('resultados.png')
+
+
+steps = np.arange(1,flat_samples.shape[0]+1)
+N = np.arange(ndim)
+
+columns2 = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"]
+
+fig8=plt.figure(8,figsize=(12,ndim*3.5))
+fig8.subplots_adjust(wspace=0.4,hspace=0.47,top=0.99,bottom=0.02,left=0.08,right=0.98)
+for i in N:
+    ax8=fig8.add_subplot(ndim,1,i+1)
+    ax8.plot(steps, flat_samples[:,i], 'k.', ms=2)#, alpha=.5)
+    ax8.plot(steps, theta_true[i]*np.ones(flat_samples.shape[0]), '-', c='orange', lw=1.)
+    ax8.set_title(columns2[i])
+
+fig8.savefig('steps.png')
 
 
 

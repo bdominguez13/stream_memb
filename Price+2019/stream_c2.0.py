@@ -165,7 +165,7 @@ e_d = d*0.03
 
 print('\nGuardando resultados \n')
 
-columns2 = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "ln_posterior"]
+columns2 = ["$a_{\mu_{\phi_1}}$", "$a_{\mu_{\phi_2}}$", "$a_d$", "$b_{\mu_{\phi_1}}$", "$b_{\mu_{\phi_2}}$", "$b_d$", "$c_{\mu_{\phi_1}}$", "$c_{\mu_{\phi_2}}$", "$c_d$", "$x_{\mu_{\phi_1}}$", "$x_{\mu_{\phi_2}}$", "$x_d$", "f", "ln_posterior"]
 theta_resul = pd.DataFrame(columns = columns2)
 theta_resul.loc[0] = theta_max
 theta_resul.loc[1] = theta_50

@@ -34,7 +34,6 @@ miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
 
 #Parametros de la corriente
 y = np.array([pmphi1.value, pmphi2.value, d])
-# C = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza: Fija para todas las estrellas
 
 #Parametros para el prior gaussiano de los movimientos propios en el frame de la corriente
 mu = np.array([mu1_mean, mu2_mean])
@@ -90,10 +89,6 @@ with Pool() as pool:
     multi_time = end-start 
     print('Tiempo MCMC: ', datetime.timedelta(seconds=multi_time), 'hrs')#,serial_time/multi_time)
 
-    
-# tau = sampler.get_autocorr_time()
-# print('tau: ', tau)
-# print('tau promedio: {}'.format(np.mean(tau)))
 
 # np.save('pos_final.npy', pos_final)
 
@@ -124,8 +119,6 @@ inside50 = memb > 0.5
 Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)
 
-
-### A partir de acá es posible que la computaddora se quede sin memoria, tengo que ver como optimizar los calculos. Igual antes de eso hay problemas mas graves que atender primero :|
 
 
 print('Guardando percentiles \n')
@@ -163,16 +156,17 @@ y_d = init.model(x, theta_max[2], theta_max[5], theta_max[8], theta_max[11])
 
 
 #Errores en mu1 y mu2
-C_obs = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]])
-C_int = C_tot - C_obs
+C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]])
+C_obs = C_tot - C_int
 
-e_pmphi1 = np.array([C_int[i][0,0]**0.5 for i in range(len(phi1))])
-e_pmphi2 = np.array([C_int[i][1,1]**0.5 for i in range(len(phi1))])
+e_pmphi1 = np.array([C_obs[i][0,0]**0.5 for i in range(len(phi1))])
+e_pmphi2 = np.array([C_obs[i][1,1]**0.5 for i in range(len(phi1))])
 e_d = d*0.03
 
 print('\nGuardando resultados \n')
 
-theta_resul = pd.DataFrame(columns = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"])
+columns2 = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "ln_posterior"]
+theta_resul = pd.DataFrame(columns = columns2)
 theta_resul.loc[0] = theta_max
 theta_resul.loc[1] = theta_50
 theta_resul.loc[2] = theta_qmin
@@ -186,12 +180,12 @@ print('Graficando resultados')
 inside = inside10
 star = (inside50==True) & (footprint==True)
 
-xy_mask = (phi1.value>=-20.) & (phi1.value<=15.) & (phi2.value>=-3.) & (phi2.value<=5.)
+xy_mask = (phi1.value>=-20.) & (phi1.value<=15.) & (phi2.value>=-3.) & (phi2.value<=5.) #Ver como automatizar estos valores
 
 print('Inside: ', inside.sum())
 print('Stars: ', star.sum())
 
-
+#Parabolas del MAP y percentiles con las estrellas inside10 y estrellas miembros
 fig7=plt.figure(7,figsize=(15,10))
 fig7.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.25,left=0.09,right=0.98)
 
@@ -262,11 +256,9 @@ cbar = fig7.colorbar(m, cax=cb_ax, ax=ax7, orientation='horizontal', label='prob
 
 fig7.savefig('resultados.png')
 
-
+#Valor de lo parametros en funcion de los pasos
 steps = np.arange(1,flat_samples.shape[0]+1)
 N = np.arange(ndim)
-
-columns2 = ["$a_{\mu1}$", "$a_{\mu2}$", "$a_d$", "$b_{\mu1}$", "$b_{\mu2}$", "$b_d$", "$c_{\mu1}$", "$c_{\mu2}$", "$c_d$", "$x_{\mu1}$", "$x_{\mu2}$", "$x_d$", "f", "Posterior"]
 
 fig8=plt.figure(8,figsize=(12,ndim*3.5))
 fig8.subplots_adjust(wspace=0.4,hspace=0.47,top=0.99,bottom=0.02,left=0.08,right=0.98)
@@ -274,7 +266,7 @@ for i in N:
     ax8=fig8.add_subplot(ndim,1,i+1)
     ax8.plot(steps, flat_samples[:,i], 'k.', ms=2)#, alpha=.5)
     ax8.plot(steps, theta_true[i]*np.ones(flat_samples.shape[0]), '-', c='orange', lw=1.)
-    ax8.set_title(columns2[i])
+    ax8.set_title(columns[i])
 
 fig8.savefig('steps.png')
 

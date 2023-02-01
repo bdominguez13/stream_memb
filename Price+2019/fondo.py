@@ -96,8 +96,8 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         #Comparo modelo del fondo con los datos
         sample = gmm_best.sample(pmra_out.size)
 
-        fig5=plt.figure(5,figsize=(10,10))
-        fig5.subplots_adjust(wspace=0.4,hspace=0.3,top=0.98,bottom=0.11,left=0.14,right=0.97)
+        fig5=plt.figure(5,figsize=(12,8))
+        fig5.subplots_adjust(wspace=0.35,hspace=0.34,top=0.98,bottom=0.12,left=0.12,right=0.97)
         ax5=fig5.add_subplot(221)
         ax5.scatter(pmra_out, pmdec_out, s=1, label='Obs')
         ax5.scatter(sample[0][:,0], sample[0][:,1], s=1, label='GMM')

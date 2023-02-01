@@ -10,7 +10,7 @@ def quantiles(x, flat_samples, q_min, q_max):
     flat_samples: Resultado de la MCMC achatada, sin el burn-in y adelgazada, con la posterior de cada paso insertada al final
     q_min, q_max: Percentiles inf y sup
     
-    Otputs:
+    Outputs:
     theta_max, theta_50, theta_qmin, theta_qmax: Parametros correspondientes al MAP, mediana y los percentiles q_min y q_max
     quantiles_mu1, quantiles_mu2, quantiles_d: Puntos de grafico del modelo para los percentiles q_min, 50 y q_max para mu1, mu2 y distancia
     
@@ -21,8 +21,10 @@ def quantiles(x, flat_samples, q_min, q_max):
     theta_max = flat_samples[np.argmax(ln_post)]
     
     
+    #Matriz donde en cada fila se repite el array x
     x = x*np.ones((flat_samples.shape[0], x.size))
     
+    #Transformo arrays en vectores columna
     a_mu1 = flat_samples[:,0].reshape(flat_samples.shape[0],1)
     a_mu2 = flat_samples[:,1].reshape(flat_samples.shape[0],1)
     a_d = flat_samples[:,2].reshape(flat_samples.shape[0],1)
@@ -35,24 +37,27 @@ def quantiles(x, flat_samples, q_min, q_max):
     c_mu2 = flat_samples[:,7].reshape(flat_samples.shape[0],1)
     c_d = flat_samples[:,8].reshape(flat_samples.shape[0],1)
     
+    #Transformo arrays en matrices donde en cada columna se repite el array
     x_mu1 = (flat_samples[:,9]*np.ones((x.shape[1],flat_samples.shape[0]))).T
     x_mu2 = (flat_samples[:,10]*np.ones((x.shape[1],flat_samples.shape[0]))).T
     x_d = (flat_samples[:,11]*np.ones((x.shape[1],flat_samples.shape[0]))).T
     
+    #Matrices con el valor de la parabola para cada punto de x (columnas) para todos los conjuntos de paramentros (filas)
     model_mu1 = a_mu1 + np.multiply(b_mu1, (x-x_mu1)) + np.multiply(c_mu1, (x-x_mu1)**2)
     model_mu2 = a_mu2 + np.multiply(b_mu2, (x-x_mu2)) + np.multiply(c_mu2, (x-x_mu2)**2)
     model_d = a_d + np.multiply(b_d, (x-x_d)) + np.multiply(c_d, (x-x_d)**2)
     
+    #Percentiles q_min, 50 y q_max de las parabolas de cada variable
     quantiles_mu1 = np.percentile(model_mu1, [q_min, 50, q_max], axis=0)
     quantiles_mu2 = np.percentile(model_mu2, [q_min, 50, q_max], axis=0)
     quantiles_d = np.percentile(model_d, [q_min, 50, q_max], axis=0)
     
-    
+
+    #Percentiles 50, q_min y q_max de la posterior de los parametros y los correspondientes parametros
     p_50 = np.percentile(ln_post, 50)
     i_50 = abs(ln_post-p_50).argmin()
     theta_50 = flat_samples[i_50]
-
-    #Percentiles q_min y q_max
+    
     p_qmin = np.percentile(ln_post, q_min)
     p_qmax = np.percentile(ln_post, q_max)
     i_qmin = abs(ln_post-p_qmin).argmin()
@@ -60,6 +65,7 @@ def quantiles(x, flat_samples, q_min, q_max):
 
     theta_qmin = flat_samples[i_qmin]
     theta_qmax = flat_samples[i_qmax]
+    
     
     return theta_max, theta_50, theta_qmin, theta_qmax, quantiles_mu1, quantiles_mu2, quantiles_d
 

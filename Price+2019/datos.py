@@ -29,10 +29,12 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     data: Tabla con los datos originales
     phi1, phi2: Posicion de las estrellas en el frame de la corriente
     pmphi1, pmphi2: Moviemientos propios de las estrellas en el frame de la corriente
+    pmphi1_reflex, pmphi2_reflex: Moviemientos propios de las estrellas en el frame de la corriente corregidas por el reflejo solar
     pmra, pmdec, d: Movimientos propios en ascención recta y declinacion y distancias de las estrellas
     phi1_t, phi2_t, pmphi1_t, pmphi2_t: Posicion y movimientos propios del track en el frame de la corriente
     pmra_out, pmdec_out, d_out: movimientos propios y distancia de las estrellas fuera del track en ar y dec
     e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec
+    C_tot: Matriz de covarianza intrinseca (fija) + observacional en el frame del stream
     footprint: Mascara con las estrellas espacialmente dentro del track
     """
 
@@ -49,7 +51,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     ##Cargo track y transformo coordenadas
     mwsts = galstreams.MWStreams(verbose=False, implement_Off=False)
     track = mwsts[st].track
-    track = gc.reflex_correct(track)
+    #track = gc.reflex_correct(track) #Por ahora no uso la correcion por reflejo del sol
     st_track = track.transform_to(mwsts[st].stream_frame)
     
     phi1_t = st_track.phi1
@@ -62,15 +64,21 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, distance=data['Dist']*u.kpc, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA']))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
     
-    c_reflex = gc.reflex_correct(c)
-    st_coord_reflex = c_reflex.transform_to(mwsts[st].stream_frame)
-    
     phi1 = st_coord.phi1 #deg
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
     d = data['Dist'] #kpc
     e_d = d*0.03 #kpc
+    
+    
+    #Correcion por reflejo del sol (por ahora no lo uso)
+    c_reflex = gc.reflex_correct(c)
+    st_coord_reflex = c_reflex.transform_to(mwsts[st].stream_frame)
+    
+    pmphi1_reflex = st_coord_reflex.pm_phi1_cosphi2 #mas/yr
+    pmphi2_reflex = st_coord_reflex.pm_phi2 #mas/yr
+    
     
     #Seleciono estrellas fuera del track
     ra = data['RA_ICRS'] #deg
@@ -83,8 +91,6 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     pmdec = c.pm_dec.value #data['pmDE'] #mas/yr
     e_pmdec = data['e_pmDE'] #mas/yr
     
-    pmphi1_reflex = st_coord_reflex.pm_phi1_cosphi2 #mas/yr
-    pmphi2_reflex = st_coord_reflex.pm_phi2 #mas/yr
     
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
     #Select the field points inside the polygon footprint
@@ -104,7 +110,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     d_out = d[off]
     e_d_out = d_out*0.03
     
-    #Matriz de covarianza de las estrellas intrinsica+observacional
+    #Matriz de covarianza de las estrellas intrinsica + observacional
     C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza intrinseca: Fija para todas las estrellas
     
     C_pm = [None for n in range(len(e_pmra))]  
@@ -130,7 +136,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))
-        fig.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.07,left=0.07,right=0.95)
+        fig.subplots_adjust(wspace=0.3,hspace=0.34,top=0.9,bottom=0.17,left=0.11,right=0.97)
         ax=fig.add_subplot(121)
         ax.plot(data[inside]['RA_ICRS'],data[inside]['DE_ICRS'],'.',ms=5)
         ax.plot(data[out]['RA_ICRS'],data[out]['DE_ICRS'],'.',ms=5)
@@ -153,7 +159,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
 
 
         fig2=plt.figure(2,figsize=(12,8))
-        fig2.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.07,left=0.07,right=0.95)
+        fig2.subplots_adjust(wspace=0.3,hspace=0.34,top=0.95,bottom=0.13,left=0.1,right=0.97)
         ax2=fig2.add_subplot(221)
         ax2.plot(phi1[inside],phi2[inside],'.',ms=5)
         ax2.plot(phi1[out],phi2[out],'.',ms=2.5)

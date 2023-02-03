@@ -29,8 +29,8 @@ tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C
 
 data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint = datos.datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup)
 
-
-miembro_PW = (data['Track']==1) & (data['Memb']>0.5)
+sgr = data['Dist'] > 40 #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
+miembro_PW = (data['Track'][~sgr]==1) & (data['Memb'][~sgr]>0.5)
 
 #Parametros de la corriente
 y = np.array([pmphi1.value, pmphi2.value, d])

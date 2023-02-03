@@ -125,9 +125,9 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         # ax5.set_ylim([-5,1])
 
         ax5=fig5.add_subplot(224)
-        ax5.hist(d_out,bins=70, alpha=0.7)
-        ax5.hist(sample[0][:,2],bins=70, alpha=0.7)
-        ax5.set_xlim(0,60.)
+        ax5.hist(d_out,bins=45, alpha=0.5)
+        ax5.hist(sample[0][:,2],bins=45, alpha=0.5)
+        ax5.set_xlim(0,45.)
         ax5.set_xlabel('$d$ (kpc)');
 
         fig5.savefig('bg_sample.png')

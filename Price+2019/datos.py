@@ -59,16 +59,21 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     pmphi1_t = st_track.pm_phi1_cosphi2
     pmphi2_t = st_track.pm_phi2
     
+    
+    sgr = data['Dist'] > 40 #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
+    
+    
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, distance=data['Dist']*u.kpc, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA']))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+    c = ac.ICRS(ra=data['RA_ICRS'][~sgr]*u.degree, dec=data['DE_ICRS'][~sgr]*u.degree, distance=data['Dist'][~sgr]*u.kpc, pm_ra_cosdec=data['pmRA'][~sgr]*u.mas/u.yr, pm_dec=data['pmDE'][~sgr]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~sgr]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
+    
     
     phi1 = st_coord.phi1 #deg
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'] #kpc
+    d = data['Dist'][~sgr] #kpc
     e_d = d*0.03 #kpc
     
     
@@ -81,15 +86,15 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     
     
     #Seleciono estrellas fuera del track
-    ra = data['RA_ICRS'] #deg
-    e_ra = data['e_RA_ICRS']/3600 #deg
-    dec = data['DE_ICRS'] #deg
-    e_dec = data['e_DE_ICRS']/3600 #deg
+    ra = data['RA_ICRS'][~sgr] #deg
+    e_ra = data['e_RA_ICRS'][~sgr]/3600 #deg
+    dec = data['DE_ICRS'][~sgr] #deg
+    e_dec = data['e_DE_ICRS'][~sgr]/3600 #deg
     
-    pmra = c.pm_ra_cosdec.value #data['pmRA'] #mas/yr
-    e_pmra = data['e_pmRA'] #mas/yr
-    pmdec = c.pm_dec.value #data['pmDE'] #mas/yr
-    e_pmdec = data['e_pmDE'] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'][~sgr] #mas/yr
+    e_pmra = data['e_pmRA'][~sgr] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'][~sgr] #mas/yr
+    e_pmdec = data['e_pmDE'][~sgr] #mas/yr
     
     
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
@@ -129,27 +134,27 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     C_tot = C_int + C_obs
     
     #Estrellas del track y del fondo
-    d_in = (data['Dist']>d_inf) & (data['Dist']<d_sup)
-    inside = (data['Track']==1)
-    out = (data['Track']==0)
-    miembro = inside & (data['Memb']>0.5)
+    d_in = (d>d_inf) & (d<d_sup)
+    inside = (data['Track'][~sgr]==1)
+    out = (data['Track'][~sgr]==0)
+    miembro = inside & (data['Memb'][~sgr]>0.5)
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))
         fig.subplots_adjust(wspace=0.3,hspace=0.34,top=0.9,bottom=0.17,left=0.11,right=0.97)
         ax=fig.add_subplot(121)
-        ax.plot(data[inside]['RA_ICRS'],data[inside]['DE_ICRS'],'.',ms=5)
-        ax.plot(data[out]['RA_ICRS'],data[out]['DE_ICRS'],'.',ms=5)
-        ax.plot(data[miembro]['RA_ICRS'],data[miembro]['DE_ICRS'],'*',c='red',ms=10)
+        ax.plot(ra[inside],dec[inside],'.',ms=5)
+        ax.plot(ra[out],dec[out],'.',ms=5)
+        ax.plot(ra[miembro],dec[miembro],'*',c='red',ms=10)
         ax.set_xlabel('$\\alpha$ (°)')
         ax.set_ylabel('$\delta$ (°)')
-        ax.set_xlim([max(data['RA_ICRS']), min(data['RA_ICRS'])])
-        ax.set_ylim([min(data['DE_ICRS']), max(data['DE_ICRS'])])
+        ax.set_xlim([max(ra), min(ra)])
+        ax.set_ylim([min(dec), max(dec)])
 
         ax=fig.add_subplot(122)
-        ax.scatter(data[inside & d_in]['pmRA'],data[inside & d_in]['pmDE'],s=5, label='in')
-        ax.scatter(data[out & d_in]['pmRA'],data[out & d_in]['pmDE'],s=5, label='out')
-        ax.scatter(data[miembro & d_in]['pmRA'],data[miembro & d_in]['pmDE'],s=50, marker='*',color='red', label='memb')
+        ax.scatter(pmra[inside & d_in],pmdec[inside & d_in],s=5, label='in')
+        ax.scatter(pmra[out & d_in],pmdec[out & d_in],s=5, label='out')
+        ax.scatter(pmra[miembro & d_in],pmdec[miembro & d_in],s=50, marker='*',color='red', label='memb')
         ax.set_xlabel('$\mu_\\alpha*$ ("/año)')
         ax.set_ylabel('$\mu_\delta$ ("/año)')
         ax.set_title('${} < d < {}$ kpc'.format(d_inf, d_sup))
@@ -203,8 +208,8 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
         fig3=plt.figure(3,figsize=(8,6))
         fig3.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.07,left=0.07,right=0.95)
         ax3=fig3.add_subplot(111)
-        ax3.plot(data[inside]['RA_ICRS'],data[inside]['DE_ICRS'],'.',ms=5)
-        ax3.plot(data[out]['RA_ICRS'],data[out]['DE_ICRS'],'.',ms=2.5)
+        ax3.plot(ra[inside],dec[inside],'.',ms=5)
+        ax3.plot(ra[out],dec[out],'.',ms=2.5)
         ax3.plot(track.ra, track.dec, 'k.', ms=1.)
         ax3.plot(mwsts[st].poly_sc.icrs.ra, mwsts[st].poly_sc.icrs.dec, lw=1.,ls='--', color='black')
         ax3.set_xlabel('$\\alpha$ (°)')

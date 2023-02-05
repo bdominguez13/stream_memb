@@ -116,7 +116,7 @@ memb = resultados.memb(phi1, flat_blobs)
 inside10 = memb > 0.1 
 inside50 = memb > 0.5
 
-Memb = pd.DataFrame({'SolID': data['SolID'], 'DR2Name': data['DR2Name'], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
+Memb = pd.DataFrame({'SolID': data['SolID'][~sgr], 'DR2Name': data['DR2Name'][~sgr], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)
 
 

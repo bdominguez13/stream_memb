@@ -98,9 +98,22 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     
     
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
+    
+    #Create poly
+    skypath = np.loadtxt('pal5_extended_skypath.icrs.txt')
+    skypath_N = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,1]*u.deg, frame='icrs')
+    skypath_S = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,2]*u.deg, frame='icrs')
+
+    # Concatenate N track, S-flipped track and add first point at the end to close the polygon (needed for ADQL)
+    on_poly = ac.SkyCoord(ra = np.concatenate((skypath_N.ra,skypath_S.ra[::-1],skypath_N.ra[:1])),
+                            dec = np.concatenate((skypath_N.dec,skypath_S.dec[::-1],skypath_N.dec[:1])),
+                            unit=u.deg, frame='icrs')
+
     #Select the field points inside the polygon footprint
-    footprint = mwsts[st].get_mask_in_poly_footprint(field)
-    off = ~mwsts[st].get_mask_in_poly_footprint(field)
+    footprint = galstreams.get_mask_in_poly_footprint(on_poly, field, stream_frame=mwsts[st].stream_frame)
+    off = ~footprint
+    # footprint = mwsts[st].get_mask_in_poly_footprint(field)
+    # off = ~mwsts[st].get_mask_in_poly_footprint(field)
     
     ra_out = ra[off]
     dec_out = dec[off]
@@ -116,7 +129,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_inf, d_sup):
     e_d_out = d_out*0.03
     
     #Matriz de covarianza de las estrellas intrinsica + observacional
-    C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza intrinseca: Fija para todas las estrellas
+    C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza intrinseca (el stream tiene un ancho distinto a 0, los datos se alejan de la media no solo por el error observacional, sino tambien xq es intrinsecamente disperso): Fija para todas las estrellas
     
     C_pm = [None for n in range(len(e_pmra))]  
     for i in range(len(e_pmra)):

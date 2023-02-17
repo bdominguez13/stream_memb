@@ -43,7 +43,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
     
     Outputs:
     ll_bgn: Ln probabilidad de que una estrella pertenezca al backgroud
-    p_bgn: Probabilidad de que una estrella pertenezca al backgroud
+    #p_bgn: Probabilidad de que una estrella pertenezca al backgroud
     gmm_best: Modelo de GMM para el mejor numero de gaussinas segun el XD (si do_bg_model == 'yes')
     BIC_xd: Array del BIC para los diferentes numeros de gaussianas segun el XD (si do_bg_model == 'yes')
     """
@@ -90,7 +90,7 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
         ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
         p_bgn = np.exp(gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T)) #Likelihood del fondo para cada estrella n
         np.save('ll_bgn.npy', ll_bgn)
-        np.save('p_bgn.npy', p_bgn)
+        # np.save('p_bgn.npy', p_bgn)
 
 
         #Comparo modelo del fondo con los datos
@@ -132,13 +132,13 @@ def fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, 
 
         fig5.savefig('bg_sample.png')
         
-        return ll_bgn, p_bgn, gmm_best, BIC_xd
+        return ll_bgn, gmm_best, BIC_xd
 
     else:
         print('\nCargando ll_bgn y p_bgn \n')
         ll_bgn = np.load('ll_bgn.npy')
-        p_bgn = np.load('p_bgn.npy')
+        # p_bgn = np.load('p_bgn.npy')
         
-        return ll_bgn, p_bgn, None, None
+        return ll_bgn, None, None
 
 

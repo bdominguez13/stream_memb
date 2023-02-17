@@ -42,7 +42,7 @@ e_dd = e_dd*5
 
 print('\nModelo de fondo \n')
 N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
-ll_bgn, p_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
+ll_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
 
 
 #Para que funcione tengo que primero asignarle las variables globales al modulo probs

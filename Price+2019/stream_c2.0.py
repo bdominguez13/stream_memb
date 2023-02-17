@@ -50,7 +50,7 @@ probs.phi1 = phi1
 probs.y = y
 probs.C_tot = C_tot
 probs.ll_bgn = ll_bgn
-probs.p_bgn = p_bgn
+
 
 probs.mu = mu
 probs.sigma = sigma

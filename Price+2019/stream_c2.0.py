@@ -29,7 +29,7 @@ tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C
 
 data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint = datos.datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mura, cov_mu, d_inf, d_sup)
 
-# sgr = data['Dist'] > 40 #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
+# sgr = data['Dist'] > 40 #Creo mascara para sacar a la corriente de Sagitario de la ecuacion
 sgr = (data['Dist'] < 10) | (data['Dist'] > 27) #Corte en distancia para que deje un numero parecido de estrellas en el fondo ~1301
 
 miembro_PW = (data['Track'][~sgr]==1) & (data['Memb'][~sgr]>0.5)
@@ -146,7 +146,7 @@ fig6.subplots_adjust(bottom=0.05,left=0.05)
 fig6.savefig('corner_plot.png')
 
 
-#Median --> No lo uso, puede dar fruta: Si la distribución es prefectamente bimodal, la mediana tiene probabilidad ~0
+#Median --> No lo uso, puede dar fruta: Si la distribucion es prefectamente bimodal, la mediana tiene probabilidad ~0
 median_mu1 = init.model(x, theta_50[0], theta_50[3], theta_50[6], theta_50[9])
 median_mu2 = init.model(x, theta_50[1], theta_50[4], theta_50[7], theta_50[10])
 median_d = init.model(x, theta_50[2], theta_50[5], theta_50[8], theta_50[11])

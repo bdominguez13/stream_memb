@@ -35,14 +35,16 @@ def parametros():
     
     d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
 
-    #Matriz de covarianza del stream
+    #Matriz de covarianza intrinseca del stream (en ra, dec ? )
     C11, C22, C33 = 0.05**2, 0.05**2, 0.2**2  #mas/yr, mas/yr, kpc
     
     #Priors
+    ra_mean, dec_mean = 229.022, -0.112
     d_mean, e_dd = 23.6, 0.8
-    mu1_mean, mu2_mean = 3.78307899, 0.71613004
-    e_mu1, e_mu2, rho_mu = 0.022, 0.025, -0.39
-    cov_mu = rho_mu*e_mu1*e_mu2 #rho_xy = sigma_xy/(sigma_x*sigma_y)
+    # mu1_mean, mu2_mean = 3.78307899, 0.71613004 #o 3.758023767746698, 0.7343094450236292 si transformo mu_ra y mu_dec del paper
+    mura_mean, mudec_mean = -2.728, -2.687
+    e_mura, e_mudec, rho_mu = 0.022, 0.025, -0.39 #Estos son en (alpha, delta), no tendría que transformar a los errores en phi1 y phi2?
+    cov_mu = rho_mu*e_mura*e_mudec #rho_xy = sigma_xy/(sigma_x*sigma_y)
 
     lim_unif = [(-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-20, 15), (-20, 15), (-20, 15), (0, 1)]
     # lim_unif = [(-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-20, 15), (-20, 15), (-20, 15), (0.004, 0.012)]
@@ -54,6 +56,6 @@ def parametros():
     #quantiles
     q_min, q_max = 5, 95
     
-    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max
+    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max
 
 

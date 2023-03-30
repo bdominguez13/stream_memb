@@ -14,7 +14,7 @@ import gala.coordinates as gc
 import galstreams
 
 
-def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, d_inf, d_sup):
+def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max):
     """
     Funcion que devuelve la posicion, movimientos propios y distancia de las estrellas y del track en el frame de la corriente, y los movimientos propios en ar y dec y distancia de las estrellas por fuera del track junto a sus errores
     

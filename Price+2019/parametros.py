@@ -21,7 +21,9 @@ def parametros():
     discard: Numero de pasos descartados por el burn-in
     thin: Numero de pasos cada cuanto tomar un valor
     
-    q_min, q_max: percentiles minimo y maximo
+    q_min, q_max: Percentiles minimo y maximo
+    
+    cut_d_min, cut_d_max: Limites inferior y superior en la mascara de corte en distancia
     
     """
     
@@ -56,6 +58,11 @@ def parametros():
     #quantiles
     q_min, q_max = 5, 95
     
-    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max
+    #limites de mascara de corte en distancia
+    cut_d_min = 10
+    cut_d_max = 27
+    
+    
+    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max
 
 

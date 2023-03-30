@@ -26,8 +26,9 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     ra_mean, dec_mean: Ascención recta y declinacion medios del stream
     mura_mean, mura_mean: Movimientos propios medios en ascención recta y declinacion 
     e_mura, e_mura, cov_mu: Errores de los movimientos propios medios en ascencion recta y declinacion, y el factor de correlacion entre ambos
-    d_inf: Distancia minima de la corriente
-    d_sup: Distancia maxima de la corriente
+    d_inf, d_sup: Distancia minima y maxima de la corriente
+    cut_d_min, cut_d_max: Limites inferior y superior en la mascara de corte en distancia
+
     
     Outputs:
     data: Tabla con los datos originales
@@ -40,6 +41,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec
     C_tot: Matriz de covarianza intrinseca (fija) + observacional en el frame del stream
     footprint: Mascara con las estrellas espacialmente dentro del track
+    cut_d: Corte en distancia de las estrellas que no voy a tomar en cuenta
     """
 
     print('\nCargando datos \n')
@@ -64,13 +66,12 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     pmphi2_t = st_track.pm_phi2
     
     
-    # sgr = data['Dist'] > 40 #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
-    sgr = (data['Dist'] < 10) | (data['Dist'] > 27) #Corte en distancia para que deje un numero parecido de estrellas en el fondo ~1301
-
+    #mascara en distancia
+    cut_d = (data['Dist'] < cut_d_min) | (data['Dist'] > cut_d_max) #Corte en distancia para que deje un numero parecido de estrellas en el fondo ~1301
     
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS'][~sgr]*u.degree, dec=data['DE_ICRS'][~sgr]*u.degree, distance=data['Dist'][~sgr]*u.kpc, pm_ra_cosdec=data['pmRA'][~sgr]*u.mas/u.yr, pm_dec=data['pmDE'][~sgr]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~sgr]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+    c = ac.ICRS(ra=data['RA_ICRS'][~cut_d]*u.degree, dec=data['DE_ICRS'][~cut_d]*u.degree, distance=data['Dist'][~cut_d]*u.kpc, pm_ra_cosdec=data['pmRA'][~cut_d]*u.mas/u.yr, pm_dec=data['pmDE'][~cut_d]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~cut_d]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
     
     
@@ -78,7 +79,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'][~sgr] #kpc
+    d = data['Dist'][~cut_d] #kpc
     e_d = d*0.03 #kpc
     
     
@@ -91,15 +92,15 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     
     #Seleciono estrellas fuera del track
-    ra = data['RA_ICRS'][~sgr] #deg
-    e_ra = data['e_RA_ICRS'][~sgr]/3600 #deg
-    dec = data['DE_ICRS'][~sgr] #deg
-    e_dec = data['e_DE_ICRS'][~sgr]/3600 #deg
+    ra = data['RA_ICRS'][~cut_d] #deg
+    e_ra = data['e_RA_ICRS'][~cut_d]/3600 #deg
+    dec = data['DE_ICRS'][~cut_d] #deg
+    e_dec = data['e_DE_ICRS'][~cut_d]/3600 #deg
     
-    pmra = c.pm_ra_cosdec.value #data['pmRA'][~sgr] #mas/yr
-    e_pmra = data['e_pmRA'][~sgr] #mas/yr
-    pmdec = c.pm_dec.value #data['pmDE'][~sgr] #mas/yr
-    e_pmdec = data['e_pmDE'][~sgr] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'][~cut_d] #mas/yr
+    e_pmra = data['e_pmRA'][~cut_d] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'][~cut_d] #mas/yr
+    e_pmdec = data['e_pmDE'][~cut_d] #mas/yr
     
     
     #Create poly
@@ -170,9 +171,9 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     #Estrellas del track y del fondo
     d_in = (d>d_inf) & (d<d_sup)
-    inside = (data['Track'][~sgr]==1)
-    out = (data['Track'][~sgr]==0)
-    miembro = inside & (data['Memb'][~sgr]>0.5)
+    inside = (data['Track'][~cut_d]==1)
+    out = (data['Track'][~cut_d]==0)
+    miembro = inside & (data['Memb'][~cut_d]>0.5)
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))
@@ -257,7 +258,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
         fig2.savefig('track_memb.png')
         # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint
+    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, cut_d
 
 
 
@@ -314,12 +315,10 @@ def datos_sinsgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     
     
     sgr = data['Dist'] > 40 #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
-    # sgr = (data['Dist'] < 10) | (data['Dist'] > 27) #Corte en distancia para que deje un numero parecido de estrellas en el fondo ~1301
-
     
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS'][~sgr]*u.degree, dec=data['DE_ICRS'][~sgr]*u.degree, distance=data['Dist'][~sgr]*u.kpc, pm_ra_cosdec=data['pmRA'][~sgr]*u.mas/u.yr, pm_dec=data['pmDE'][~sgr]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~sgr]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+    c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, distance=data['Dist']*u.kpc, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA']))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
     
     
@@ -327,7 +326,7 @@ def datos_sinsgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'][~sgr] #kpc
+    d = data['Dist'] #kpc
     e_d = d*0.03 #kpc
     
     
@@ -340,15 +339,15 @@ def datos_sinsgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     
     
     #Seleciono estrellas fuera del track
-    ra = data['RA_ICRS'][~sgr] #deg
-    e_ra = data['e_RA_ICRS'][~sgr]/3600 #deg
-    dec = data['DE_ICRS'][~sgr] #deg
-    e_dec = data['e_DE_ICRS'][~sgr]/3600 #deg
+    ra = data['RA_ICRS'] #deg
+    e_ra = data['e_RA_ICRS']/3600 #deg
+    dec = data['DE_ICRS'] #deg
+    e_dec = data['e_DE_ICRS']/3600 #deg
     
-    pmra = c.pm_ra_cosdec.value #data['pmRA'][~sgr] #mas/yr
-    e_pmra = data['e_pmRA'][~sgr] #mas/yr
-    pmdec = c.pm_dec.value #data['pmDE'][~sgr] #mas/yr
-    e_pmdec = data['e_pmDE'][~sgr] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'] #mas/yr
+    e_pmra = data['e_pmRA'] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'] #mas/yr
+    e_pmdec = data['e_pmDE'] #mas/yr
     
     
     #Create poly
@@ -419,9 +418,9 @@ def datos_sinsgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     
     #Estrellas del track y del fondo
     d_in = (d>d_inf) & (d<d_sup)
-    inside = (data['Track'][~sgr]==1)
-    out = (data['Track'][~sgr]==0)
-    miembro = inside & (data['Memb'][~sgr]>0.5)
+    inside = (data['Track']==1)
+    out = (data['Track']==0)
+    miembro = inside & (data['Memb']>0.5)
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))
@@ -562,12 +561,10 @@ def datos_consgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     pmphi1_t = st_track.pm_phi1_cosphi2
     pmphi2_t = st_track.pm_phi2
     
-    
-    sgr = data['Dist'] > max(data['Dist']) #Creo máscara para sacar a la corriente de Sagitario de la ecuacion
-    
+        
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS'][~sgr]*u.degree, dec=data['DE_ICRS'][~sgr]*u.degree, distance=data['Dist'][~sgr]*u.kpc, pm_ra_cosdec=data['pmRA'][~sgr]*u.mas/u.yr, pm_dec=data['pmDE'][~sgr]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~sgr]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+    c = ac.ICRS(ra=data['RA_ICRS']*u.degree, dec=data['DE_ICRS']*u.degree, distance=data['Dist']*u.kpc, pm_ra_cosdec=data['pmRA']*u.mas/u.yr, pm_dec=data['pmDE']*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA']))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
     
     
@@ -575,7 +572,7 @@ def datos_consgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'][~sgr] #kpc
+    d = data['Dist'] #kpc
     e_d = d*0.03 #kpc
     
     
@@ -588,15 +585,15 @@ def datos_consgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     
     
     #Seleciono estrellas fuera del track
-    ra = data['RA_ICRS'][~sgr] #deg
-    e_ra = data['e_RA_ICRS'][~sgr]/3600 #deg
-    dec = data['DE_ICRS'][~sgr] #deg
-    e_dec = data['e_DE_ICRS'][~sgr]/3600 #deg
+    ra = data['RA_ICRS'] #deg
+    e_ra = data['e_RA_ICRS']/3600 #deg
+    dec = data['DE_ICRS'] #deg
+    e_dec = data['e_DE_ICRS']/3600 #deg
     
-    pmra = c.pm_ra_cosdec.value #data['pmRA'][~sgr] #mas/yr
-    e_pmra = data['e_pmRA'][~sgr] #mas/yr
-    pmdec = c.pm_dec.value #data['pmDE'][~sgr] #mas/yr
-    e_pmdec = data['e_pmDE'][~sgr] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'] #mas/yr
+    e_pmra = data['e_pmRA'] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'] #mas/yr
+    e_pmdec = data['e_pmDE'] #mas/yr
     
     
     #Create poly
@@ -667,9 +664,9 @@ def datos_consgr(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean
     
     #Estrellas del track y del fondo
     d_in = (d>d_inf) & (d<d_sup)
-    inside = (data['Track'][~sgr]==1)
-    out = (data['Track'][~sgr]==0)
-    miembro = inside & (data['Memb'][~sgr]>0.5)
+    inside = (data['Track']==1)
+    out = (data['Track']==0)
+    miembro = inside & (data['Memb']>0.5)
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))

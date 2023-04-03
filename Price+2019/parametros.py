@@ -31,7 +31,7 @@ def parametros():
     st = 'Pal5-PW19' #Nombre de la corriente
     
     printTrack = 'no'
-    do_bg_model = 'no' #Calcular (yes/no) modelo de fondo
+    do_bg_model = 'yes' #Calcular (yes/no) modelo de fondo
     N_inf, N_sup = 6, 7 #Numero min y (max+1) de gaussianas para el xd
     printBIC = 'no'
     
@@ -59,8 +59,8 @@ def parametros():
     q_min, q_max = 5, 95
     
     #limites de mascara de corte en distancia
-    cut_d_min = 10
-    cut_d_max = 27
+    cut_d_min = 0.
+    cut_d_max = 35.
     
     
     return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max

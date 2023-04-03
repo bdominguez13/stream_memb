@@ -66,12 +66,13 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     pmphi2_t = st_track.pm_phi2
     
     
-    #mascara en distancia
-    cut_d = (data['Dist'] < cut_d_min) | (data['Dist'] > cut_d_max) #Corte en distancia para que deje un numero parecido de estrellas en el fondo ~1301
+    #mascara en datos
+    mask = (data['Dist'] > cut_d_min) & (data['Dist'] < cut_d_max) & (data['pmRA'] != 0.) & (data['pmDE'] !=0.) & (data['RA_ICRS'] < 250) & (data['DE_ICRS'] > -10.)
+
     
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
     
-    c = ac.ICRS(ra=data['RA_ICRS'][~cut_d]*u.degree, dec=data['DE_ICRS'][~cut_d]*u.degree, distance=data['Dist'][~cut_d]*u.kpc, pm_ra_cosdec=data['pmRA'][~cut_d]*u.mas/u.yr, pm_dec=data['pmDE'][~cut_d]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][~cut_d]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+    c = ac.ICRS(ra=data['RA_ICRS'][mask]*u.degree, dec=data['DE_ICRS'][mask]*u.degree, distance=data['Dist'][mask]*u.kpc, pm_ra_cosdec=data['pmRA'][mask]*u.mas/u.yr, pm_dec=data['pmDE'][mask]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][mask]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
     st_coord = c.transform_to(mwsts[st].stream_frame)
     
     
@@ -79,7 +80,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     phi2 = st_coord.phi2 #deg
     pmphi1 = st_coord.pm_phi1_cosphi2 #mas/yr
     pmphi2 = st_coord.pm_phi2 #mas/yr
-    d = data['Dist'][~cut_d] #kpc
+    d = data['Dist'][mask] #kpc
     e_d = d*0.03 #kpc
     
     
@@ -92,15 +93,15 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     
     #Seleciono estrellas fuera del track
-    ra = data['RA_ICRS'][~cut_d] #deg
-    e_ra = data['e_RA_ICRS'][~cut_d]/3600 #deg
-    dec = data['DE_ICRS'][~cut_d] #deg
-    e_dec = data['e_DE_ICRS'][~cut_d]/3600 #deg
+    ra = data['RA_ICRS'][mask] #deg
+    e_ra = data['e_RA_ICRS'][mask]/3600 #deg
+    dec = data['DE_ICRS'][mask] #deg
+    e_dec = data['e_DE_ICRS'][mask]/3600 #deg
     
-    pmra = c.pm_ra_cosdec.value #data['pmRA'][~cut_d] #mas/yr
-    e_pmra = data['e_pmRA'][~cut_d] #mas/yr
-    pmdec = c.pm_dec.value #data['pmDE'][~cut_d] #mas/yr
-    e_pmdec = data['e_pmDE'][~cut_d] #mas/yr
+    pmra = c.pm_ra_cosdec.value #data['pmRA'][mask] #mas/yr
+    e_pmra = data['e_pmRA'][mask] #mas/yr
+    pmdec = c.pm_dec.value #data['pmDE'][mask] #mas/yr
+    e_pmdec = data['e_pmDE'][mask] #mas/yr
     
     
     #Create poly
@@ -171,9 +172,9 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     #Estrellas del track y del fondo
     d_in = (d>d_inf) & (d<d_sup)
-    inside = (data['Track'][~cut_d]==1)
-    out = (data['Track'][~cut_d]==0)
-    miembro = inside & (data['Memb'][~cut_d]>0.5)
+    inside = (data['Track'][mask]==1)
+    out = (data['Track'][mask]==0)
+    miembro = inside & (data['Memb'][mask]>0.5)
     
     if printTrack == 'yes':
         fig=plt.figure(1,figsize=(12,6))
@@ -258,7 +259,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
         fig2.savefig('track_memb.png')
         # fig3.savefig('track.png')
 
-    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, cut_d
+    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, mask
 
 
 

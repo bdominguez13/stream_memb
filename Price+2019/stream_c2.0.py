@@ -27,9 +27,9 @@ print('Inicio: ', Start, '\n')
 
 tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max = parametros.parametros()
 
-data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, cut_d = datos.datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mura, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max)
+data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, mask = datos.datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mura, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max)
 
-miembro_PW = (data['Track'][~cut_d]==1) & (data['Memb'][~cut_d]>0.5)
+miembro_PW = (data['Track'][mask]==1) & (data['Memb'][mask]>0.5)
 
 #Parametros de la corriente
 y = np.array([pmphi1.value, pmphi2.value, d])
@@ -115,7 +115,7 @@ memb = resultados.memb(phi1, flat_blobs)
 inside10 = memb > 0.1 
 inside50 = memb > 0.5
 
-Memb = pd.DataFrame({'SolID': data['SolID'][~cut_d], 'DR2Name': data['DR2Name'][~cut_d], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
+Memb = pd.DataFrame({'SolID': data['SolID'][mask], 'DR2Name': data['DR2Name'][mask], 'Memb': memb,'inside10': inside10, 'inside50': inside50})
 Memb.to_csv('memb_prob.csv', index=False)
 
 

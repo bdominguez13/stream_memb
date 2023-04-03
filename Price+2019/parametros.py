@@ -27,7 +27,8 @@ def parametros():
     
     """
     
-    tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
+    # tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
+    tabla = 'mix_table.fit'
     st = 'Pal5-PW19' #Nombre de la corriente
     
     printTrack = 'no'

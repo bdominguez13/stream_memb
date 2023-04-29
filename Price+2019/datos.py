@@ -67,7 +67,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     
     #mascara en datos
-    mask = (data['Dist'] > cut_d_min) & (data['Dist'] < cut_d_max) & (data['pmRA'] != 0.) & (data['pmDE'] !=0.) & (data['RA_ICRS'] < 250) & (data['DE_ICRS'] > -10.)
+    mask = (data['Dist'] > cut_d_min) & (data['Dist'] < cut_d_max) & (data['pmRA'] != 0.) & (data['pmDE'] !=0.) #& (data['RA_ICRS'] < 250) & (data['DE_ICRS'] > -10.)
 
     
     _ = ac.galactocentric_frame_defaults.set('v4.0') #set the default Astropy Galactocentric frame parameters to the values adopted in Astropy v4.0
@@ -123,17 +123,17 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     # footprint = mwsts[st].get_mask_in_poly_footprint(field)
     # off = ~mwsts[st].get_mask_in_poly_footprint(field)
     
-    ra_out = ra[off]
-    dec_out = dec[off]
-    e_ra_out = e_ra[off]
-    e_dec_out = e_dec[off]
+    ra_out = ra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    dec_out = dec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_ra_out = e_ra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_dec_out = e_dec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
 
-    pmra_out = pmra[off]
-    pmdec_out = pmdec[off]
-    e_pmra_out = e_pmra[off]
-    e_pmdec_out = e_pmdec[off]
+    pmra_out = pmra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    pmdec_out = pmdec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_pmra_out = e_pmra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_pmdec_out = e_pmdec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
     
-    d_out = d[off]
+    d_out = d[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
     e_d_out = d_out*0.03
     
     #Matriz de covarianza de las estrellas intrinsica + observacional

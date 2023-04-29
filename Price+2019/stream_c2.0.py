@@ -7,10 +7,12 @@ import resultados
 
 import numpy as np
 import pandas as pd
-import pylab as plt
 import scipy
+import pylab as plt
 import seaborn as sns
 sns.set(style="ticks", context="poster")
+
+from sklearn.mixture import GaussianMixture
 
 import os #Avoids issues with paralellization in emcee
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -25,7 +27,7 @@ Start = datetime.datetime.now()
 
 print('Inicio: ', Start, '\n')
 
-tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max = parametros.parametros()
+tabla, st, printTrack, do_xd_model, N_inf, N_sup, i_best_xd, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max = parametros.parametros()
 
 data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, mask = datos.datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mura, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max)
 
@@ -40,9 +42,24 @@ sigma = np.array([[e_mu1**2, cov_mu], [cov_mu, e_mu2**2]])
 e_dd = e_dd*5
 
 print('\nModelo de fondo \n')
-N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
-ll_bgn, gmm_best, BIC = fondo.fondo(do_bg_model, printBIC, N, pmra, pmdec, d, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
+data1 = pd.read_csv('rrls_in_pal5_bkg.m5_ngc5634_removed.csv', index_col=0)
+mask1 = (data1['D_ps1']>0.) & (data1['D_ps1']<35.) & (data1['pmra'] != 0.) & (data1['pmdec'] !=0.)
 
+pmra_out = np.array(data1[mask1]['pmra'])
+pmdec_out = np.array(data1[mask1]['pmdec'])
+e_pmra_out = np.array(data1[mask1]['pmra_error'])
+e_pmdec_out = np.array(data1[mask1]['pmdec_error'])
+d_out = np.array(data1[mask1]['D_ps1'])
+e_d_out = d_out*0.03
+
+
+if do_xd_model=='si':
+    N = np.arange(N_inf, N_sup) #Vector con numero de gaussianas
+    i_best_xd = fondo.XD_minBIC(N, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
+
+gmm_best = fondo.fondo(i_best_xd, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out)
+ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
+    
 
 #Para que funcione tengo que primero asignarle las variables globales al modulo probs
 probs.phi1 = phi1

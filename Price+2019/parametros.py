@@ -3,9 +3,9 @@ def parametros():
     tabla: Nombre de la tabla de datos
     st: Nombre de la corriente
     
-    do_bg_model: Calcular (yes/no) modelo de fondo
+    do_xd_model: Calcular (yes/no) modelo de fondo
     N_inf, N_sup: Numero min y (max+1) de gaussianas para el xd
-    printBIC: Imprimir (yes/no) grafico del BIC
+    i_best_xd: Mejor numero de gaussianas para el modelo del fondo (si se conoce)
     
     d_inf, d_sup: Limites en distancia de la corriente 
     
@@ -27,14 +27,14 @@ def parametros():
     
     """
     
-    # tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
-    tabla = 'mix_table.fit'
+    tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
+    # tabla = 'mix_table.fit'
     st = 'Pal5-PW19' #Nombre de la corriente
     
     printTrack = 'no'
-    do_bg_model = 'yes' #Calcular (yes/no) modelo de fondo
-    N_inf, N_sup = 6, 7 #Numero min y (max+1) de gaussianas para el xd
-    printBIC = 'no'
+    do_xd_model = 'no' #Calcular (yes/no) modelo de fondo
+    N_inf, N_sup = 3, 13 #Numero min y (max+1) de gaussianas para el xd
+    i_best_xd = 6 #Mejor numero de gaussians para modelo del fondo
     
     d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
 
@@ -64,6 +64,6 @@ def parametros():
     cut_d_max = 35.
     
     
-    return tabla, st, printTrack, do_bg_model, printBIC, N_inf, N_sup, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max
+    return tabla, st, printTrack, do_xd_model, N_inf, N_sup, i_best_xd, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max
 
 

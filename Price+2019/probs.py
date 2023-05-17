@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.stats import multivariate_normal
+# from scipy.stats import multivariate_normal
+from astroML.utils import log_multivariate_gaussian
 from scipy.stats import norm
 
 
@@ -20,6 +21,31 @@ from scipy.stats import norm
 #     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
 
 
+def ln_prior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
+    """ln prior de los parametros del modelo (theta_st) y el peso f
+    
+    Inputs:
+    theta = theta_st, f
+    theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    
+    Global variables:
+    mu, sigma: Medias y matriz de covarianza para a_mu1 y a_mu2
+    d_mean, e_dd: Media y varianza para a_d
+    lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    """
+    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
+    
+    # lp_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
+    lp_a12 = log_multivariate_gaussian(np.stack((a_mu1, a_mu2), axis=-1), mu, sigma)
+    lp_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)
+    
+    p = theta[3:13]
+    if not all(b[0] < v < b[1] for v, b in zip(p, lim_unif)):
+        return -np.inf
+    
+    return lp_a12 + lp_ad + 0.
+
+
 def lnlike_st(theta):
     """
     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
@@ -35,11 +61,13 @@ def lnlike_st(theta):
     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
     model = np.array([model_mu1, model_mu2, model_d])
     
-    ll_st = np.array([multivariate_normal.logpdf(y.T[i], mean=model.T[i], cov=C_tot[i]) for i in range(phi1.size)])
+    # ll_st = np.array([multivariate_normal.logpdf(y.T[i], mean=model.T[i], cov=C_tot[i]) for i in range(phi1.size)])
+    ll_st = log_multivariate_gaussian(y.T, model.T, C_tot)
     
     return ll_st
 
-#Defino log-likelihood 
+
+
 def ln_likelihood(theta):
     """Dado los parametros del modelo (theta_st), el peso f y las variables globales phi1, C y el ln_likelihood del fondo (ll_bgn), devuelve el likelihood total de las estrellas, el ln likelihood de la corriente por su peso (ln(f) + ln_st) y el ln likelihhod del fondo por su peso (ln(1-f) + ll_bgn)
     
@@ -55,6 +83,42 @@ def ln_likelihood(theta):
     return np.sum(np.logaddexp(arg1, arg2)), arg1, arg2
 
 
+
+def ln_posterior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
+    """ Devuelve ln posterior, y el ln likelihood de la corriente por su peso (ln(f) + ln_st) y el ln likelihhod del fondo por su peso (ln(1-f) + ll_pbgn) en forma de tupla
+    
+    Inputs:
+    theta = theta_st, f
+    theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    
+    Global variables:
+    mu, sigma: Mmedias y matriz de covarianza para a_mu1 y a_mu2
+    d_mean, e_dd: Media y varianza para a_d
+    lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
+    
+    Outputs:
+    ln posterior de las estrellas
+    Tupla con el ln likelihood de la corriente por su peso (ln(f) + ln_st) en la primera entrada y el ln likelihood del fondo por su peso (ln(1-f) + ll_bgn) en la segunda entrada
+    """
+    lp = ln_prior(theta)#, mu, sigma, d_mean, e_dd, lim_unif)
+    ll, arg1, arg2 = ln_likelihood(theta)
+    
+    if not np.isfinite(lp):
+        return -np.inf, None
+    
+    if not np.isfinite(ll):
+        return -np.inf, None
+    
+    return lp + ll, (arg1, arg2)
+
+
+
+#+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+
+
+
+
+
 #Defino prior
 def ln_unif(p, lim_inf, lim_sup):
     """ln de distribucion uniforme con limites entre lim_inf y lim_sup, para los puntos p
@@ -66,6 +130,7 @@ def ln_unif(p, lim_inf, lim_sup):
             return 0.0
         return -np.inf
 
+    
 
 def ln_prior2(theta, mu, sigma, d_mean, e_dd, lim_unif):
     """ln prior de los parametros del modelo (theta_st) y el peso f
@@ -112,29 +177,6 @@ def ln_prior2(theta, mu, sigma, d_mean, e_dd, lim_unif):
     return lp_a12 + lp_ad + lp_b1 + lp_b2 + lp_bd + lp_c1 + lp_c2 + lp_cd + lp_x1 + lp_x2 + lp_xd + lp_f
 
 
-def ln_prior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
-    """ln prior de los parametros del modelo (theta_st) y el peso f
-    
-    Inputs:
-    theta = theta_st, f
-    theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
-    
-    Global variables:
-    mu, sigma: Medias y matriz de covarianza para a_mu1 y a_mu2
-    d_mean, e_dd: Media y varianza para a_d
-    lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
-    """
-    a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f = theta
-    
-    lp_a12 = multivariate_normal.logpdf(np.stack((a_mu1, a_mu2), axis=-1), mean=mu, cov=sigma)
-    lp_ad = norm.logpdf(a_d, loc=d_mean, scale=e_dd)
-    
-    p = theta[3:13]
-    if not all(b[0] < v < b[1] for v, b in zip(p, lim_unif)):
-        return -np.inf
-    
-    return lp_a12 + lp_ad + 0.
-
 
 def prior_sample(mu, sigma, d_mean, e_dd, lim_unif, n):
     """Muestra de puntos a partir de los priors
@@ -164,30 +206,6 @@ def prior_sample(mu, sigma, d_mean, e_dd, lim_unif, n):
     return np.stack((a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d, f), axis=-1)
 
 
-#Defino posterior
-def ln_posterior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
-    """ Devuelve ln posterior, y el ln likelihood de la corriente por su peso (ln(f) + ln_st) y el ln likelihhod del fondo por su peso (ln(1-f) + ll_pbgn) en forma de tupla
-    
-    Inputs:
-    theta = theta_st, f
-    theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
-    
-    Global variables:
-    mu, sigma: Mmedias y matriz de covarianza para a_mu1 y a_mu2
-    d_mean, e_dd: Media y varianza para a_d
-    lim_unif: Limites inferior y superior (lim_inf, lim_sup) para las distribuciones uniformes de b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d
-    
-    Outputs:
-    ln posterior de las estrellas
-    Tupla con el ln likelihood de la corriente por su peso (ln(f) + ln_st) en la primera entrada y el ln likelihood del fondo por su peso (ln(1-f) + ll_bgn) en la segunda entrada
-    """
-    lp = ln_prior(theta)#, mu, sigma, d_mean, e_dd, lim_unif)
-    ll, arg1, arg2 = ln_likelihood(theta)
-    if not np.isfinite(lp):
-        return -np.inf, None
-    return lp + ll, (arg1, arg2)
-
-
 
 def ln_likelihood_prueba(theta):
 
@@ -197,6 +215,8 @@ def ln_likelihood_prueba(theta):
     arg2 = np.log(1.-f) + ll_bgn
 
     return np.sum(np.logaddexp(arg1, arg2)), arg1, arg2
+
+
 
 def ln_posterior_prueba(theta, mu, sigma, d_mean, e_dd, lim_unif):
 

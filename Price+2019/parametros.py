@@ -28,7 +28,7 @@ def parametros():
     """
     
     tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
-    # tabla = 'mix_table.fit'
+    # tabla = 'g_all.csv'
     st = 'Pal5-PW19' #Nombre de la corriente
     
     printTrack = 'no'
@@ -48,13 +48,12 @@ def parametros():
     mura_mean, mudec_mean = -2.728, -2.687
     e_mura, e_mudec, rho_mu = 0.022, 0.025, -0.39 #Estos son en (alpha, delta), no tendría que transformar a los errores en phi1 y phi2?
     cov_mu = rho_mu*e_mura*e_mudec #rho_xy = sigma_xy/(sigma_x*sigma_y)
-
     lim_unif = [(-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-20, 15), (-20, 15), (-20, 15), (0, 1)]
     # lim_unif = [(-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-20, 15), (-20, 15), (-20, 15), (0.004, 0.012)]
 
     #MCMC
-    nwalkers, ndim, steps = 104, 13, 2**17#2**12
-    burn_in, thin = 2**10, 2200 #50, 10 #2**10, 2200
+    nwalkers, ndim = 104, 13
+    burn_in, steps, thin = 2**10, 2**17, 2200 #50, 2**12, 10 
     
     #quantiles
     q_min, q_max = 5, 95

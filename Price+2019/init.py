@@ -55,9 +55,9 @@ def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
     params_mu2, _ = curve_fit(model, phi1.value[miembro], pmphi2.value[miembro])
     params_d, _ = curve_fit(model, phi1.value[miembro], d[miembro])
     
-    init = np.array([params_mu1[0], params_mu2[0], params_d[0], params_mu1[1], params_mu2[1], params_d[1], params_mu1[2], params_mu2[2], params_d[2], params_mu1[3], params_mu2[3], params_d[3], miembro.sum()/phi1.value.size])
+    init = np.array([params_mu1[0], params_mu2[0], params_d[0], params_mu1[1], params_mu2[1], params_d[1], params_mu1[2], params_mu2[2], params_d[2], params_mu1[3], params_mu2[3], params_d[3], 0.2]) #HACK: f=0.2
     pos0 = init*np.ones((nwalkers, ndim)) + init*1e-1*np.random.randn(nwalkers, ndim) #ndim parametros iniciales
 
-    print('Valores iniciales: ', init)
+    # print('Valores iniciales: ', init)
     
     return pos0, init

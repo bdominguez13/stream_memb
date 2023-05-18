@@ -15,7 +15,7 @@ import gala.coordinates as gc
 import galstreams
 
 
-def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max):
+def datos(tabla, st, Name, C_int, d_mean, d_lim, ra_lim, dec_lim):
     """
     Funcion que devuelve la posicion, movimientos propios y distancia de las estrellas y del track en el frame de la corriente, y los movimientos propios en ar y dec y distancia de las estrellas por fuera del track junto a sus errores
     
@@ -28,7 +28,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     mura_mean, mura_mean: Movimientos propios medios en ascención recta y declinacion 
     e_mura, e_mura, cov_mu: Errores de los movimientos propios medios en ascencion recta y declinacion, y el factor de correlacion entre ambos
     d_inf, d_sup: Distancia minima y maxima de la corriente
-    cut_d_min, cut_d_max: Limites inferior y superior en la mascara de corte en distancia
+    d_lim: Limites inferior y superior en la mascara de corte en distancia
 
     
     Outputs:
@@ -50,10 +50,6 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     ##Cargo datos
     f = fits.open(tabla)
     data = f[1].data
-    # data.columns
-    # Table(data)
-    
-    # data = pd.read_csv('g_all.csv')
 
     print('Cargando track y transformando coordenadas \n')
     
@@ -70,7 +66,7 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     
     
     #mascara en datos
-    mask = (data['Dist'] > cut_d_min) & (data['Dist'] < cut_d_max) & (data['pmRA'] != 0.) & (data['pmDE'] !=0.)# & (data['RA_ICRS'] < 250) & (data['DE_ICRS'] > -10.)
+    mask = (data['Dist'] > d_lim[0]) & (data['Dist'] < d_lim[1]) & (data['pmRA'] != 0.) & (data['pmDE'] !=0.)# & (data['RA_ICRS'] < 250) & (data['DE_ICRS'] > -10.)
 
         
     c = ac.ICRS(ra=data['RA_ICRS'][mask]*u.degree, dec=data['DE_ICRS'][mask]*u.degree, distance=data['Dist'][mask]*u.kpc, pm_ra_cosdec=data['pmRA'][mask]*u.mas/u.yr, pm_dec=data['pmDE'][mask]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmRA'][mask]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
@@ -85,15 +81,15 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     e_d = d*0.03 #kpc
     
     
-    #Correcion por reflejo del sol (por ahora no lo uso)
-    c_reflex = gc.reflex_correct(c)
-    st_coord_reflex = c_reflex.transform_to(mwsts[st].stream_frame)
+#     #Correcion por reflejo del sol (por ahora no lo uso)
+#     c_reflex = gc.reflex_correct(c)
+#     st_coord_reflex = c_reflex.transform_to(mwsts[st].stream_frame)
     
-    pmphi1_reflex = st_coord_reflex.pm_phi1_cosphi2 #mas/yr
-    pmphi2_reflex = st_coord_reflex.pm_phi2 #mas/yr
+#     pmphi1_reflex = st_coord_reflex.pm_phi1_cosphi2 #mas/yr
+#     pmphi2_reflex = st_coord_reflex.pm_phi2 #mas/yr
     
     
-    #Seleciono estrellas fuera del track
+    #Seleciono estrellas dentro de la mascara
     ra = data['RA_ICRS'][mask] #deg
     e_ra = data['e_RA_ICRS'][mask]/3600 #deg
     dec = data['DE_ICRS'][mask] #deg
@@ -117,40 +113,42 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
                             dec = np.concatenate((skypath_N.dec,skypath_S.dec[::-1],skypath_N.dec[:1])),
                             unit=u.deg, frame='icrs')
 
-    #Select the field points inside the polygon footprint
+    #Mascara del track del stream
     footprint = galstreams.get_mask_in_poly_footprint(on_poly, field, stream_frame=mwsts[st].stream_frame)
     off = ~footprint
     
     # footprint = mwsts[st].get_mask_in_poly_footprint(field)
     # off = ~mwsts[st].get_mask_in_poly_footprint(field)
     
-#     ra_out = ra[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     dec_out = dec[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     e_ra_out = e_ra[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     e_dec_out = e_dec[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    #Estrellas del fondo
+    ra_out = ra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    dec_out = dec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_ra_out = e_ra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_dec_out = e_dec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
 
-#     pmra_out = pmra[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     pmdec_out = pmdec[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     e_pmra_out = e_pmra[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     e_pmdec_out = e_pmdec[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
-#     pmra_pmdec_corr_out = pmra_pmdec_corr[off]
+    pmra_out = pmra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    pmdec_out = pmdec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_pmra_out = e_pmra[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_pmdec_out = e_pmdec[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    pmra_pmdec_corr_out = pmra_pmdec_corr[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
     
-#     d_out = d[off]# & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    d_out = d[off & (data['RA_ICRS'][mask] < 250) & (data['DE_ICRS'][mask] > -10.)]
+    e_d_out = d_out*0.08
+    
+    #Archivo nuevo de las estrellas del fondo
+#     data1 = pd.read_csv('rrls_in_pal5_bkg.m5_ngc5634_removed.csv', index_col=0)
+#     mask1 = (data1['D_ps1']>0.) & (data1['D_kpc']<35.) & (data1['pmra'] != 0.) & (data1['pmdec'] !=0.)
+
+#     pmra_out = np.array(data1[mask1]['pmra'])
+#     pmdec_out = np.array(data1[mask1]['pmdec'])
+#     e_pmra_out = np.array(data1[mask1]['pmra_error'])
+#     e_pmdec_out = np.array(data1[mask1]['pmdec_error'])
+#     pmra_pmdec_corr_out = np.array(data1[mask1]['pmra_pmdec_corr'])
+#     d_out = np.array(data1[mask1]['D_ps1'])
 #     e_d_out = d_out*0.08
     
     
-    data1 = pd.read_csv('rrls_in_pal5_bkg.m5_ngc5634_removed.csv', index_col=0)
-    mask1 = (data1['D_ps1']>0.) & (data1['D_kpc']<35.) & (data1['pmra'] != 0.) & (data1['pmdec'] !=0.)
-
-    pmra_out = np.array(data1[mask1]['pmra'])
-    pmdec_out = np.array(data1[mask1]['pmdec'])
-    e_pmra_out = np.array(data1[mask1]['pmra_error'])
-    e_pmdec_out = np.array(data1[mask1]['pmdec_error'])
-    pmra_pmdec_corr_out = np.array(data1[mask1]['pmra_pmdec_corr'])
-    d_out = np.array(data1[mask1]['D_ps1'])
-    e_d_out = d_out*0.08
-    
-    #Matriz de covarianza de las estrellas intrinsica + observacional
+    #Matriz de covarianza de las estrellas intrinsica + observacional <--No tiene en cuenta correlacion entre pm
 #     C_int = np.array([[C11, 0, 0], [0, C22, 0], [0, 0, C33]]) #Matriz de covarianza intrinseca (el stream tiene un ancho distinto a 0, los datos se alejan de la media no solo por el error observacional, sino tambien xq es intrinsecamente disperso): Fija para todas las estrellas
     
 #     C_pm = [None for n in range(len(e_pmra))]  
@@ -168,9 +166,8 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
 
 #     C_tot = C_int + C_obs
     
-    #Matriz de covarianza de las estrellas intrinsica + observacional
-    C_int = np.diag([C11, C22, C33]) #Matriz de covarianza intrinseca (el stream tiene un ancho distinto a 0, los datos se alejan de la media no solo por el error observacional, sino tambien xq es intrinsecamente disperso): Fija para todas las estrellas
     
+    #Matriz de covarianza de las estrellas intrinsica + observacional
     C_pm = [None for n in range(len(e_pmra))]  
     for i in range(len(e_pmra)):
         C_pm[i] = np.array([[e_pmra[i]**2, e_pmra[i]*e_pmdec[i]*pmra_pmdec_corr[i]],
@@ -187,19 +184,54 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
     C_tot = C_int + C_obs
     
     
+    
     #Valores medio y errores del cluster en phi1 y phi2
-    c_mean = ac.ICRS(ra=ra_mean*u.degree, dec=dec_mean*u.degree, distance=d_mean*u.kpc, pm_ra_cosdec=mura_mean*u.mas/u.yr, pm_dec=mudec_mean*u.mas/u.yr, radial_velocity=0*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
-    st_coord = c_mean.transform_to(mwsts[st].stream_frame)
+#     c_mean = ac.ICRS(ra=ra_mean*u.degree, dec=dec_mean*u.degree, distance=d_mean*u.kpc, pm_ra_cosdec=mura_mean*u.mas/u.yr, pm_dec=mudec_mean*u.mas/u.yr, radial_velocity=0*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.
+#     st_coord = c_mean.transform_to(mwsts[st].stream_frame)
 
-    mu1_mean = st_coord.pm_phi1_cosphi2.value #mas/yr
-    mu2_mean = st_coord.pm_phi2.value #mas/yr
+#     mu1_mean = st_coord.pm_phi1_cosphi2.value #mas/yr
+#     mu2_mean = st_coord.pm_phi2.value #mas/yr
 
-    C_mean = np.array([[(e_mura*10)**2, cov_mu*100], [cov_mu*100, (e_mudec*10)**2]])
-    C_mean = gc.transform_pm_cov(c_mean, C_mean, mwsts[st].stream_frame)
-    e_mu1 = np.sqrt(C_mean[0,0])
-    e_mu2 = np.sqrt(C_mean[1,1])
-    cov_mu = C_mean[0,1]
+#     C_mean = np.array([[(e_mura*10)**2, cov_mu*100], [cov_mu*100, (e_mudec*10)**2]])
+#     C_mean = gc.transform_pm_cov(c_mean, C_mean, mwsts[st].stream_frame)
+#     e_mu1 = np.sqrt(C_mean[0,0])
+#     e_mu2 = np.sqrt(C_mean[1,1])
+#     cov_mu = C_mean[0,1]
+    
+    
+    #Valores medio y errores del cluster en phi1 y phi2
+    f = fits.open('globular_clusters_Vasiliev2019.fit')
+    globs2019 = f[1].data
+    # skip_globs2019 = globs2019[(globs2019['RAJ2000'] > ra_lim[0]) & (globs2019['RAJ2000'] < ra_lim[1]) & 
+    #                    (globs2019['DEJ2000'] > dec_lim[0]) & (globs2019['DEJ2000'] < dec_lim[1]) &
+    #                    (globs2019['Name'] != 'Pal 5')]
+    vasiliev_pal5_2019 = globs2019[globs2019['Name'] == Name]
 
+    vasiliev_pal5_g_2019 = ac.SkyCoord(ra=vasiliev_pal5_2019['RAJ2000'][0]*u.deg,
+                                       dec=vasiliev_pal5_2019['DEJ2000'][0]*u.deg,
+                                       distance=d_mean*u.kpc,
+                                       pm_ra_cosdec=vasiliev_pal5_2019['pmRA'][0]*u.mas/u.yr,
+                                       pm_dec=vasiliev_pal5_2019['pmDE'][0]*u.mas/u.yr,
+                                       radial_velocity=0*u.km/u.s)
+    vasiliev_pal5_c_2019 = vasiliev_pal5_g_2019.transform_to(mwsts[st].stream_frame)
+    
+    # skip_globs = skip_globs2019
+    vasiliev_pal5 = vasiliev_pal5_2019
+    vasiliev_pal5_g = vasiliev_pal5_g_2019
+    vasiliev_pal5_c = vasiliev_pal5_c_2019
+    
+    mu1_mean = vasiliev_pal5_c.pm_phi1_cosphi2.value #mas/yr
+    mu2_mean = vasiliev_pal5_c.pm_phi2.value #mas/yr
+    mu12 = np.array([mu1_mean, mu2_mean])
+            
+    n = 10
+    C_mean_radec = np.array([[(vasiliev_pal5['e_pmRA'][0]*n)**2, vasiliev_pal5['corr'][0]*vasiliev_pal5['e_pmRA'][0]*n*vasiliev_pal5['e_pmDE'][0]*n], 
+                       [vasiliev_pal5['corr'][0]*vasiliev_pal5['e_pmRA'][0]*n*vasiliev_pal5['e_pmDE'][0]*n, (vasiliev_pal5['e_pmDE'][0]*n)**2]])
+    C_mean12 = gc.transform_pm_cov(vasiliev_pal5_g, C_mean_radec, mwsts[st].stream_frame)
+
+    e_mu1 = np.sqrt(C_mean12[0,0])
+    e_mu2 = np.sqrt(C_mean12[1,1])
+    cov_mu12 = C_mean12[0,1]
     
     
     #Estrellas del track y del fondo
@@ -292,10 +324,12 @@ def datos(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_
         # fig3.savefig('track.png')
 
     # return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, e_d_out, C_tot, footprint, mask
-    return data, phi1, phi2, pmphi1, pmphi2, pmphi1_reflex, pmphi2_reflex, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu1_mean, mu2_mean, e_mu1, e_mu2, cov_mu, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, pmra_pmdec_corr_out, e_d_out, C_pm_radec, C_tot, footprint, mask
+            
+    return data, phi1, phi2, pmphi1, pmphi2, pmra, pmdec, d, phi1_t, phi2_t, pmphi1_t, pmphi2_t, mu12, C_mean12, pmra_out, pmdec_out, d_out, e_pmra_out, e_pmdec_out, pmra_pmdec_corr_out, e_d_out, C_pm_radec, C_tot, footprint, mask
 
 
-def datos_gaia(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, d_inf, d_sup, cut_d_min, cut_d_max):
+
+def datos_gaia(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, d_inf, d_sup, d_lim, ra_lim, dec_lim):
     """
     Funcion que devuelve la posicion, movimientos propios y distancia de las estrellas y del track en el frame de la corriente, y los movimientos propios en ar y dec y distancia de las estrellas por fuera del track junto a sus errores
     
@@ -308,7 +342,7 @@ def datos_gaia(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, 
     mura_mean, mura_mean: Movimientos propios medios en ascención recta y declinacion 
     e_mura, e_mura, cov_mu: Errores de los movimientos propios medios en ascencion recta y declinacion, y el factor de correlacion entre ambos
     d_inf, d_sup: Distancia minima y maxima de la corriente
-    cut_d_min, cut_d_max: Limites inferior y superior en la mascara de corte en distancia
+    cut_lim: Limites inferior y superior en la mascara de corte en distancia
 
     
     Outputs:
@@ -322,7 +356,7 @@ def datos_gaia(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, 
     e_pmra_out, e_pmdec_out, e_d_out: Errores en los movimientos propios y distancia de las estrellas fuera del track en ar y dec
     C_tot: Matriz de covarianza intrinseca (fija) + observacional en el frame del stream
     footprint: Mascara con las estrellas espacialmente dentro del track
-    cut_d: Corte en distancia de las estrellas que no voy a tomar en cuenta
+    d_lim: Corte en distancia de las estrellas que no voy a tomar en cuenta
     """
 
     print('\nCargando datos \n')
@@ -346,7 +380,7 @@ def datos_gaia(tabla, st, printTrack, C11, C22, C33, d_mean, ra_mean, dec_mean, 
     
     
     #mascara en datos
-    mask = (data['D_ps1'] > cut_d_min) & (data['D_kpc'] < cut_d_max) & (data['pmra'] != 0.) & (data['pmdec'] !=0.) & (data['ra'] < 250) & (data['dec'] > -10.)
+    mask = (data['D_ps1'] > d_lim[0]) & (data['D_kpc'] < d_lim[1]) & (data['pmra'] != 0.) & (data['pmdec'] !=0.) & (data['ra'] < 250) & (data['dec'] > -10.)
 
     
     c = ac.ICRS(ra=data['ra'][mask]*u.degree, dec=data['dec'][mask]*u.degree, distance=data['D_ps1'][mask]*u.kpc, pm_ra_cosdec=data['pmra'][mask]*u.mas/u.yr, pm_dec=data['pmdec'][mask]*u.mas/u.yr, radial_velocity=np.zeros(len(data['pmra'][mask]))*u.km/u.s) #The input coordinate instance must have distance and radial velocity information. So, if the radial velocity is not known, fill the radial velocity values with zeros to reflex-correct the proper motions.

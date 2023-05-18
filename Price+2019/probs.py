@@ -4,23 +4,6 @@ from astroML.utils import log_multivariate_gaussian
 from scipy.stats import norm
 
 
-#Defino log-likelihood del stream
-
-# def lnlike_st_viejo(theta_st):
-#     """
-#     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
-#     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d 
-#     """
-#     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
-
-#     model_mu1 = a_mu1 + b_mu1*(phi1.value-x_mu1) + c_mu1*(phi1.value-x_mu1)**2
-#     model_mu2 = a_mu2 + b_mu2*(phi1.value-x_mu2) + c_mu2*(phi1.value-x_mu2)**2
-#     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
-#     model = np.array([model_mu1, model_mu2, model_d])
-
-#     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
-
-
 def ln_prior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
     """ln prior de los parametros del modelo (theta_st) y el peso f
     
@@ -116,6 +99,20 @@ def ln_posterior(theta):#, mu, sigma, d_mean, e_dd, lim_unif):
 #+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 
 
+
+# def lnlike_st_viejo(theta_st):
+#     """
+#     Dado los parametros del modelo (theta_st) y las variables globales phi1 y C, devuelve el likelihood de las estrellas para la corriente
+#     theta_st = a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d 
+#     """
+#     a_mu1, a_mu2, a_d, b_mu1, b_mu2, b_d, c_mu1, c_mu2, c_d, x_mu1, x_mu2, x_d = theta_st
+
+#     model_mu1 = a_mu1 + b_mu1*(phi1.value-x_mu1) + c_mu1*(phi1.value-x_mu1)**2
+#     model_mu2 = a_mu2 + b_mu2*(phi1.value-x_mu2) + c_mu2*(phi1.value-x_mu2)**2
+#     model_d = a_d + b_d*(phi1.value-x_d) + c_d*(phi1.value-x_d)**2
+#     model = np.array([model_mu1, model_mu2, model_d])
+
+#     return np.diagonal(-0.5 *(np.matmul( np.matmul((y - model).T , np.linalg.inv(C) ) , (y - model) ) + np.log((2*np.pi)**y.shape[0] * np.linalg.det(C))))
 
 
 

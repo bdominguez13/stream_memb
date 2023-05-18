@@ -1,3 +1,5 @@
+import numpy as np
+
 def parametros():
     """Devuelve los parametros a usar en el scritpt:
     tabla: Nombre de la tabla de datos
@@ -30,25 +32,27 @@ def parametros():
     tabla = 'RRLwithprobthin.fit' #Nombre tabla de datos
     # tabla = 'g_all.csv'
     st = 'Pal5-PW19' #Nombre de la corriente
+    Name = 'Pal 5' #Nombre del cumulo en el catalodo de Vasiliev
     
-    printTrack = 'no'
+    # printTrack = 'no'
     do_xd_model = 'no' #Calcular (yes/no) modelo de fondo
-    N_inf, N_sup = 3, 13 #Numero min y (max+1) de gaussianas para el xd
+    N_lim = (3, 13) #Numero min y (max+1) de gaussianas para el xd
     i_best_xd = 6 #Mejor numero de gaussians para modelo del fondo
     
-    d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
+    # d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
 
-    #Matriz de covarianza intrinseca del stream (en ra, dec ? )
-    C11, C22, C33 = 0.05**2, 0.05**2, 0.2**2  #mas/yr, mas/yr, kpc
+    #Matriz de covarianza intrinseca del stream (en phi1, phi2)
+    C_int = np.diag([0.05, 0.05, 0.2])**2 #HACK, mas/yr, mas/yr, kpc
     
     #Priors
-    ra_mean, dec_mean = 229.022, -0.112
-    d_mean, e_dd = 23.6, 0.8
-    # mu1_mean, mu2_mean = 3.78307899, 0.71613004 #o 3.758023767746698, 0.7343094450236292 si transformo mu_ra y mu_dec del paper
-    mura_mean, mudec_mean = -2.728, -2.687
-    e_mura, e_mudec, rho_mu = 0.022, 0.025, -0.39 #Estos son en (alpha, delta), no tendría que transformar a los errores en phi1 y phi2?
-    cov_mu = rho_mu*e_mura*e_mudec #rho_xy = sigma_xy/(sigma_x*sigma_y)
+    d_mean, e_d_mean = 23.6, 0.8 #Kupper+2015
     lim_unif = [(-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-20, 15), (-20, 15), (-20, 15), (0, 1)]
+
+    # ra_mean, dec_mean = 229.022, -0.112
+    # mu1_mean, mu2_mean = 3.78307899, 0.71613004 #o 3.758023767746698, 0.7343094450236292 si transformo mu_ra y mu_dec del paper
+    # mura_mean, mudec_mean = -2.728, -2.687
+    # e_mura, e_mudec, rho_mu = 0.022, 0.025, -0.39 #Estos son en (alpha, delta), no tendría que transformar a los errores en phi1 y phi2?
+    # cov_mu = rho_mu*e_mura*e_mudec #rho_xy = sigma_xy/(sigma_x*sigma_y)
     # lim_unif = [(-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5), (-20, 15), (-20, 15), (-20, 15), (0.004, 0.012)]
 
     #MCMC
@@ -56,13 +60,14 @@ def parametros():
     burn_in, steps, thin = 2**10, 2**17, 2200 #50, 2**12, 10 
     
     #quantiles
-    q_min, q_max = 5, 95
+    q_lim = (5, 95)
     
-    #limites de mascara de corte en distancia
-    cut_d_min = 0.
-    cut_d_max = 35.
+    #limites de mascara
+    d_lim = (0, 35)
+    ra_lim = (215, 215)
+    dec_lim = (-15, 10)
     
     
-    return tabla, st, printTrack, do_xd_model, N_inf, N_sup, i_best_xd, d_inf, d_sup, C11, C22, C33, d_mean, e_dd, ra_mean, dec_mean, mura_mean, mudec_mean, e_mura, e_mudec, cov_mu, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_min, q_max, cut_d_min, cut_d_max
+    return tabla, st, Name, do_xd_model, N_lim, i_best_xd, C_int, d_mean, e_d_mean, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_lim, d_lim, ra_lim, dec_lim
 
 

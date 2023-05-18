@@ -61,9 +61,10 @@ e_dd = e_dd*5
 
 
 print('\nModelo de fondo \n')
-gmm_best = fondo.fondo(i_best_xd, pmra_out, pmdec_out, d_out)#, e_pmra_out, e_pmdec_out, e_d_out)
-ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
-np.save('ll_bgn_inf.npy', ll_bgn)
+#gmm_best = fondo.fondo(i_best_xd, pmra_out, pmdec_out, d_out)#, e_pmra_out, e_pmdec_out, e_d_out)
+#ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
+#np.save('ll_bgn_inf.npy', ll_bgn)
+ll_bgn = np.load('ll_bgn_inf.npy')
 
 
 print('MCMC \n')
@@ -172,8 +173,9 @@ for i in range(len(e_pmra)):
 
 C_tot = C_int + C_obs
 
-ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
-np.save('ll_bgn_memb.npy', ll_bgn)
+#ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood del fondo para cada estrella n
+#np.save('ll_bgn_memb.npy', ll_bgn)
+ll_bgn = np.load('ll_bgn_memb.npy')
 
 skypath = np.loadtxt('pal5_extended_skypath.icrs.txt')
 skypath_N = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,1]*u.deg, frame='icrs')

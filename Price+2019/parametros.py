@@ -63,8 +63,8 @@ def parametros():
     q_lim = (5, 95)
     
     #limites de mascara
-    d_lim = (0, 35)
-    ra_lim = (215, 215)
+    d_lim = (10, 35)
+    ra_lim = (215, 255)
     dec_lim = (-15, 10)
     
     

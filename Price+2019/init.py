@@ -31,6 +31,11 @@ def model(phi1, a, b, c, x):
     """
     return a + b*(phi1-x) + c*(phi1-x)**2
 
+def model3(phi1, a, b, c, d, x):
+    """Dado a,b,c,x devuelve una parabola "corrida" para los puntos phi1: a + b*(phi1-x) + c*(phi1-x)**2
+    """
+    return a + b*(phi1-x) + c*(phi1-x)**2 + d*(phi1-x)**3
+
 # inside = (data['Track']==1)
 # miembro = inside & (data['Memb']>0.5)
 
@@ -51,9 +56,9 @@ def init_ls(phi1, pmphi1, pmphi2, d, miembro, nwalkers, ndim):
     pos0: Posiciones iniciales de los ndim parametros y nwalker caminadores a partir de resolver minimos cuadrados para las estrellas que cumplan la mascara [miembro]
     init: Valores iniciales dados por minimos cuadrados
     """
-    params_mu1, _ = curve_fit(model, phi1.value[miembro], pmphi1.value[miembro])
-    params_mu2, _ = curve_fit(model, phi1.value[miembro], pmphi2.value[miembro])
-    params_d, _ = curve_fit(model, phi1.value[miembro], d[miembro])
+    params_mu1, _ = curve_fit(model3, phi1.value[miembro], pmphi1.value[miembro])
+    params_mu2, _ = curve_fit(model3, phi1.value[miembro], pmphi2.value[miembro])
+    params_d, _ = curve_fit(model3, phi1.value[miembro], d[miembro])
     
     init = np.array([params_mu1[0], params_mu2[0], params_d[0], params_mu1[1], params_mu2[1], params_d[1], params_mu1[2], params_mu2[2], params_d[2], params_mu1[3], params_mu2[3], params_d[3], 0.2]) #HACK: f = 0.2 ~ miembro_PW.sum()/footprint.sum()
     pos0 = init*np.ones((nwalkers, ndim)) + init*1e-1*np.random.randn(nwalkers, ndim) #ndim parametros iniciales

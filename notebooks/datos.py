@@ -690,7 +690,7 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
     globs_d = pd.read_csv('../catalogs/globular_clusters_Baumgardt&Vasiliev2021.txt', header=0, sep='\s+')
     baumgardt_st = globs_d[globs_d.Cluster == Name_d]
     d_mean = float(baumgardt_st.Rsun)
-    e_d_mean = float(baumgardt_st.ERsun)
+    e_d_mean = float(baumgardt_st.e_Rsun)
     
     
     f = fits.open('../catalogs/globular_clusters_Vasiliev&Baumgardt2021.fit')
@@ -934,7 +934,7 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
         ax2=fig2.add_subplot(222)
         ax2.plot(phi1[inside],d[inside],'.',color='black',ms=5)
         ax2.plot(phi1[out],d[out],'.',c='gray',ms=1.5)
-        ax2.plot(phi1_t,st_track.distance,'k-',lw=2.5)
+        ax2.plot(phi1_t,d_t,'k-',lw=2.5)
         # ax2.set_xlabel('$\phi_1$ (°)')
         ax2.set_ylabel('$d$ (kpc)')
         ax2.set_xlim([-20,15])

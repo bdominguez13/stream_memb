@@ -5,8 +5,8 @@ import seaborn as sns
 sns.set(style="ticks", context="poster")
 
 from astroML.density_estimation import XDGMM
-from sklearnex import patch_sklearn #accelerate your Scikit-learn applications
-patch_sklearn()
+# from sklearnex import patch_sklearn #accelerate your Scikit-learn applications
+# patch_sklearn()
 from sklearn.mixture import GaussianMixture
 
 #Busco mejor numero de gaussianas

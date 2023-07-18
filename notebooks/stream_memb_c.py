@@ -118,7 +118,6 @@ print('Guardando muestras \n')
 
 #Guardo las posteriors
 ln_post = sampler.get_log_prob(discard=0, thin=thin, flat=True)
-post_true, _ = probs.ln_posterior(theta_true)
 
 theta_post['ln_posterior'] = ln_post
 theta_post.to_csv('theta_post.csv', index=False)
@@ -126,6 +125,7 @@ theta_post.to_csv('theta_post.csv', index=False)
 flat_samples = np.insert(flat_samples, flat_samples.shape[1], np.array(ln_post), axis=1)
 
 
+print('Calculando membresias \n')
 #Calculo membresias
 probs.phi1 = phi1
 probs.y = y
@@ -293,7 +293,7 @@ for i in N:
     # ax3.plot(steps, theta_true[i]*np.ones(flat_samples.shape[0]), '-', color='magenta', lw=1.)
     ax3.set_title(columns[i])
     
-    
+fig3.savefig('steps.png')    
 
 
 y_mu1 = init.model(x, theta_max[0], theta_max[3], theta_max[6], theta_max[9], theta_max[12])

@@ -13,8 +13,8 @@ import matplotlib as mpl
 import seaborn as sns
 sns.set(style="ticks", context="poster")
 
-from sklearnex import patch_sklearn #accelerate your Scikit-learn applications
-patch_sklearn()
+# from sklearnex import patch_sklearn #accelerate your Scikit-learn applications
+# patch_sklearn()
 from sklearn.mixture import GaussianMixture
 
 import astropy

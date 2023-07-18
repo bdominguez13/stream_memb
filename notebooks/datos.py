@@ -376,7 +376,7 @@ def datos_gaia(tabla, st, Name, C_int, d_mean, d_lim, ra_lim, dec_lim):
 
     ##Cargo datos
     
-    data = pd.read_csv('catalogs/g_all.csv')
+    data = pd.read_csv('../catalogs/g_all.csv')
 
     print('Cargando track y transformando coordenadas \n')
     
@@ -429,7 +429,7 @@ def datos_gaia(tabla, st, Name, C_int, d_mean, d_lim, ra_lim, dec_lim):
     #Create poly del track
     field = ac.SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='icrs')
     
-    skypath = np.loadtxt('catalogs/pal5_extended_skypath.icrs.txt')
+    skypath = np.loadtxt('../catalogs/pal5_extended_skypath.icrs.txt')
     skypath_N = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,1]*u.deg, frame='icrs')
     skypath_S = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,2]*u.deg, frame='icrs')
 
@@ -461,7 +461,7 @@ def datos_gaia(tabla, st, Name, C_int, d_mean, d_lim, ra_lim, dec_lim):
 #     e_d_out = d_out*0.08
     
     
-    data1 = pd.read_csv('catalogs/rrls_in_pal5_bkg.m5_ngc5634_removed.csv', index_col=0)
+    data1 = pd.read_csv('../catalogs/rrls_in_pal5_bkg.m5_ngc5634_removed.csv', index_col=0)
     mask1 = (data1['D_ps1']>0.) & (data1['D_kpc']<35.) & (data1['pmra'] != 0.) & (data1['pmdec'] !=0.)
 
     pmra_out = np.array(data1[mask1]['pmra'])
@@ -512,7 +512,7 @@ def datos_gaia(tabla, st, Name, C_int, d_mean, d_lim, ra_lim, dec_lim):
     
     
     #Valores medio y errores del cluster en phi1 y phi2
-    f = fits.open('catalogs/globular_clusters_Vasiliev&Baumgardt2021.fit')
+    f = fits.open('../catalogs/globular_clusters_Vasiliev&Baumgardt2021.fit')
     globs = f[1].data
     # skip_globs = globs[(globs['RAJ2000'] > ra_lim[0]) & (globs['RAJ2000'] < ra_lim[1]) & 
     #                    (globs['DEJ2000'] > dec_lim[0]) & (globs['DEJ2000'] < dec_lim[1]) &
@@ -791,6 +791,23 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
 #     c_all_st = merged_c_pal5
     
     
+    #Le agrego miembros de Fjorm de palau19 e ibata 21
+    t1 = Table.read('../catalogs/streams/Fjorm/ibata21_xmatch_gaiadr3.csv')
+    t2 = Table.read('../catalogs/streams/Fjorm/palau19_xmatch_gaiadr3.csv')
+    Fjorm_memb = astropy.table.vstack((t1, t2))
+    Fjorm_memb.rename_column('r_med_photogeo','Dist')
+
+    g_fjorm = GaiaData(Fjorm_memb)
+    g_fjorm.data['Dist'] = (g_fjorm.data['Dist']/1000)
+    g_fjorm.data['Dist_err'] = ((g_fjorm.r_hi_photogeo - g_fjorm.r_lo_photogeo)/1000)*1.5
+    
+    g_merged = GaiaData(astropy.table.vstack((g_all.data, g_fjorm.data)))
+    merged_c = g_merged.get_skycoord(distance=g_merged.Dist*u.kpc, radial_velocity = np.zeros(len(g_merged.Dist))*u.km/u.s)
+    merged_c_fjorm = merged_c.transform_to(mwsts[st].stream_frame)
+    
+    g_all = g_merged
+    c_all = merged_c
+    c_all_st = merged_c_fjorm
     
     
     
@@ -803,9 +820,9 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
 
     
     ra = g_all.ra.value #deg
-    e_ra = g_all.ra_error.value/3600 #deg
+    # e_ra = g_all.ra_error.value/3600 #deg
     dec = g_all.dec.value #deg
-    e_dec = g_all.dec_error.value/3600 #deg
+    # e_dec = g_all.dec_error.value/3600 #deg
     
     pmra = c_all.pm_ra_cosdec.value #data['pmRA'][mask] #mas/yr
     e_pmra = g_all.pmra_error.value #mas/yr

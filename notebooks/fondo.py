@@ -68,10 +68,10 @@ def XD_minBIC(N, pmra_out, pmdec_out, d_out, C_pm_radec_out, e_d_out):
     fig4.subplots_adjust(wspace=0.25,hspace=0.34,top=0.95,bottom=0.14,left=0.19,right=0.97)
     
     ax4=fig4.add_subplot(111)
-    ax4.plot(N, np.array(BIC_xd)/X.shape[0], '--k', marker='o', lw=2, ms=6, label='BIC$_{xd}$/N')
+    ax4.plot(N, np.array(BIC_xd), '--k', marker='o', lw=2, ms=6, label='BIC$_{xd}$')
     ax4.legend()
     ax4.set_xlabel('Nº Clusters')
-    ax4.set_ylabel('BIC/N')
+    ax4.set_ylabel('BIC')
     ax4.grid()
     fig4.savefig('BIC.png')
     

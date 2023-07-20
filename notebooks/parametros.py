@@ -105,11 +105,11 @@ def parametros_Fjorm():
     Name_d = 'NGC_4590' #Nombre del cumulo en el catalogo de Baumgardt
     
     do_xd_model = 'no' #Calcular (yes/no) modelo de fondo
-    N_lim = (3, 15) #Numero min y (max+1) de gaussianas para el xd
+    N_lim = (4, 15) #Numero min y (max+1) de gaussianas para el xd
     i_best_xd = 11 #Mejor numero de gaussians para modelo del fondo
     
     
-    width = 5. #Ancho del footprint
+    width = 8. #Ancho del footprint
 
     #Matriz de covarianza intrinseca del stream (en phi1, phi2)
     C_int = np.diag([1.5, 1.25, 1.15])**2 #std de I21, mas/yr, mas/yr, kpc

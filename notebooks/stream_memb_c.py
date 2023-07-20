@@ -63,8 +63,8 @@ ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood de
 
 
 #EMCEE
-# steps = 2**14
-# thin = 225
+steps = 2**14
+thin = 225
 # 17 2200
 # 16 1100
 # 15 550
@@ -215,7 +215,7 @@ ax.scatter(phi1[inside & xy_mask], d[inside & xy_mask], s=20, c=memb[inside & xy
 ax.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.3, zorder=0)#, label='$5^{th}-95^{th}$')
 ax.plot(x, quantiles_d[1], color="orangered", lw=2, zorder=4)
 ax.plot(x, y_d, lw=2, color="blue", zorder=3)
-ax.plot(phi1_t,d_t,'-', c='black', lw=1.5, zorder=2)
+ax.plot(phi1_t, d_t,'-', c='black', lw=1.5, zorder=2)
 if parabola == True:
     for i in range(flat_samples.shape[0]):
         y_d = init.model(x, flat_samples[i,2], flat_samples[i,5], flat_samples[i,8], flat_samples[i,11], flat_samples[i,14])
@@ -242,7 +242,7 @@ ax.scatter(phi1[star], pmphi1[star], s=200., c=memb[star], cmap=cmap, marker='*'
 ax.set_xlabel('$\phi_1$ (°)')
 ax.set_ylabel('$\mu_{\phi_1}$ (mas/yr)')
 ax.set_xlim(phi1_lim)
-ax.set_ylim([-6,6])
+ax.set_ylim([-6,8])
 
 
 ax=fig.add_subplot(224)
@@ -285,7 +285,7 @@ fig2.savefig('corner_plot.png')
 steps = np.arange(1,flat_samples.shape[0]+1)
 N = np.arange(ndim)
 fig3=plt.figure(8,figsize=(12,ndim*3.5))
-fig3.subplots_adjust(wspace=0.4,hspace=0.47,top=0.99,bottom=0.02,left=0.08,right=0.98)
+fig3.subplots_adjust(wspace=0.4,hspace=0.47,top=0.99,bottom=0.02,left=0.12,right=0.98)
 for i in N:
     ax3=fig3.add_subplot(ndim,1,i+1)
     ax3.plot(steps, flat_samples[:,i], 'k.', ms=2)#, alpha=.5)

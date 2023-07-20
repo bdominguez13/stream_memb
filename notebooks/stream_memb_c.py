@@ -35,6 +35,9 @@ import datetime, time
 import emcee
 import corner
 
+import warnings
+warnings.filterwarnings('ignore')
+
 
 Start = datetime.datetime.now()
 
@@ -63,8 +66,8 @@ ll_bgn = gmm_best.score_samples(np.vstack([pmra, pmdec, d]).T) #ln_likelihood de
 
 
 #EMCEE
-steps = 2**14
-thin = 225
+#steps = 2**12
+#thin = 56
 # 17 2200
 # 16 1100
 # 15 550
@@ -215,7 +218,7 @@ ax.scatter(phi1[inside & xy_mask], d[inside & xy_mask], s=20, c=memb[inside & xy
 ax.fill_between(x, quantiles_d[0], quantiles_d[2], color="orange", alpha=0.3, zorder=0)#, label='$5^{th}-95^{th}$')
 ax.plot(x, quantiles_d[1], color="orangered", lw=2, zorder=4)
 ax.plot(x, y_d, lw=2, color="blue", zorder=3)
-ax.plot(phi1_t, d_t,'-', c='black', lw=1.5, zorder=2)
+ax.plot(phi1_t,d_t,'-', c='black', lw=1.5, zorder=2)
 if parabola == True:
     for i in range(flat_samples.shape[0]):
         y_d = init.model(x, flat_samples[i,2], flat_samples[i,5], flat_samples[i,8], flat_samples[i,11], flat_samples[i,14])

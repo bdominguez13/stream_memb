@@ -169,22 +169,22 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
     
     
     #Le agrego miembros de Fjorm de palau19 e ibata 21
-    t1 = Table.read('../catalogs/streams/Fjorm/ibata21_xmatch_gaiadr3.csv')
-    t2 = Table.read('../catalogs/streams/Fjorm/palau19_xmatch_gaiadr3.csv')
-    Fjorm_memb = astropy.table.vstack((t1, t2))
-    Fjorm_memb.rename_column('r_med_photogeo','Dist')
+#     t1 = Table.read('../catalogs/streams/Fjorm/ibata21_xmatch_gaiadr3.csv')
+#     t2 = Table.read('../catalogs/streams/Fjorm/palau19_xmatch_gaiadr3.csv')
+#     Fjorm_memb = astropy.table.vstack((t1, t2))
+#     Fjorm_memb.rename_column('r_med_photogeo','Dist')
 
-    g_fjorm = GaiaData(Fjorm_memb)
-    g_fjorm.data['Dist'] = (g_fjorm.data['Dist']/1000)
-    g_fjorm.data['Dist_err'] = ((g_fjorm.r_hi_photogeo - g_fjorm.r_lo_photogeo)/1000)*1.5
+#     g_fjorm = GaiaData(Fjorm_memb)
+#     g_fjorm.data['Dist'] = (g_fjorm.data['Dist']/1000)
+#     g_fjorm.data['Dist_err'] = ((g_fjorm.r_hi_photogeo - g_fjorm.r_lo_photogeo)/1000)*1.5
     
-    g_merged = GaiaData(astropy.table.vstack((g_all.data, g_fjorm.data)))
-    merged_c = g_merged.get_skycoord(distance=g_merged.Dist*u.kpc, radial_velocity = np.zeros(len(g_merged.Dist))*u.km/u.s)
-    merged_c_fjorm = merged_c.transform_to(mwsts[st].stream_frame)
+#     g_merged = GaiaData(astropy.table.vstack((g_all.data, g_fjorm.data)))
+#     merged_c = g_merged.get_skycoord(distance=g_merged.Dist*u.kpc, radial_velocity = np.zeros(len(g_merged.Dist))*u.km/u.s)
+#     merged_c_fjorm = merged_c.transform_to(mwsts[st].stream_frame)
     
-    g_all = g_merged
-    c_all = merged_c
-    c_all_st = merged_c_fjorm
+#     g_all = g_merged
+#     c_all = merged_c
+#     c_all_st = merged_c_fjorm
     
     
     

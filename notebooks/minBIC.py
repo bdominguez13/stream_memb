@@ -5,6 +5,7 @@ import datetime
 
 import numpy as np
 from xdgmm import XDGMM
+import pylab as plt
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -38,9 +39,9 @@ End1 = datetime.datetime.now()
 print('time1: ', End1-Star1,'\n')
 
 Delta_BIC1 = np.zeros((len(N),len(N)))
-    for i in range(len(N)):
-        for j in range(len(N)):
-            Delta_BIC1[i,j] = BIC_xd[i] - BIC_xd[j]
+for i in range(len(N)):
+    for j in range(len(N)):
+        Delta_BIC1[i,j] = BIC_xd[i] - BIC_xd[j]
 
 print('BIC1:', BIC_xd,'\n')
 print('N_best1:',N_best_xd,'\n')
@@ -79,7 +80,7 @@ print('Delta_BIC2<10:\n',bla2)
 fig = plt.figure(1,figsize=(15,6))
 fig.subplots_adjust(wspace=0.3,hspace=0.34,top=0.94,bottom=0.14,left=0.12,right=0.99)
 ax = fig.add_subplot(121)
-ax.plot(param_range, bic, '--k', marker='o', lw=2, ms=6)
+ax.plot(N, BIC_xd, '--k', marker='o', lw=2, ms=6)
 ax.grid()
 ax.set_xlabel('Nº Clusters')
 ax.set_ylabel('BIC')
@@ -91,4 +92,4 @@ ax.grid()
 ax.set_xlabel('Nº Clusters')
 ax.set_title('modelo 2')
 
-fig.savefig('prueba.png')
+fig.savefig('BICs.png')

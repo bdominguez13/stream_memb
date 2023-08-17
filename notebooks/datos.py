@@ -16,7 +16,7 @@ import galstreams
 from pyia import GaiaData
 
 
-def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
+def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim, phi1_lim, phi2_lim):
     """
     Funcion que devuelve la posicion, movimientos propios y distancia de las estrellas y del track en el frame de la corriente, y los movimientos propios en ar y dec y distancia de las estrellas por fuera del track junto a sus errores
     
@@ -115,23 +115,30 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
         return mask
 
 
-    # data = pd.read_csv('g_all.csv')
     _tbl = Table.read('../catalogs/gaiaDR3/masterv4.rrls.gapzo.gdr3-full.csv.gz', format='ascii.csv')
     _tbl_dist = Table.read('../catalogs/gaiaDR3/masterv4.rrls.gapzo.dist.short.csv.gz', format='ascii.csv') #OverflowError warning
-
     _tbl['Dist'] = _tbl_dist['Dist']
     _tbl['Dist_err'] = _tbl_dist['Dist_err']
     _tbl['metallicity_gaia'] = _tbl_dist['metallicity_gaia']
 
+    # _tbl = Table.read('../catalogs/streams/Fjorm/ForFjormCut-dist-BHB.csv')
+    # _tbl['dist'], _tbl['edist'] = _tbl['dist']/1000, _tbl['edist']/1000
+    # _tbl.rename_column('dist','Dist')
+    # _tbl.rename_column('edist','Dist_err')
+
     g_all = GaiaData(_tbl)
-    
-    mask = (g_all.ra > ra_lim[0]*u.deg) & (g_all.ra < ra_lim[1]*u.deg) & (g_all.dec > dec_lim[0]*u.deg) & (g_all.dec < dec_lim[1]*u.deg) & skip_mask(g_all.ra, g_all.dec) & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) & (g_all.dec > (((60+70)*u.deg)/((305-190)*u.deg))*(g_all.ra-305*u.deg)+60*u.deg) & (g_all.b > 10*u.deg) #& ((g_all.metallicity_gaia < -1.) | (g_all.metallicity_gaia > 10.))
-    
-    g_all = g_all[mask]
-    
     c_all = g_all.get_skycoord(distance=g_all.Dist*u.kpc, radial_velocity = np.zeros(len(g_all.Dist))*u.km/u.s)
     c_all_st = c_all.transform_to(mwsts[st].stream_frame)
     
+    mask = (g_all.ra > ra_lim[0]*u.deg) & (g_all.ra < ra_lim[1]*u.deg) & (g_all.dec > dec_lim[0]*u.deg) & (g_all.dec < dec_lim[1]*u.deg) & skip_mask(g_all.ra, g_all.dec) & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) #& (g_all.dec > (((60+70)*u.deg)/((305-190)*u.deg))*(g_all.ra-305*u.deg)+60*u.deg) & (g_all.b > 10*u.deg) & ((g_all.metallicity_gaia < -1.) | (g_all.metallicity_gaia > 10.))
+
+    # mask = skip_mask(g_all.ra, g_all.dec) & (c_all_st.phi1.value>=phi1_lim[0]) & (c_all_st.phi1.value<phi1_lim[1]) & (c_all_st.phi2.value>=phi2_lim[0]) & (c_all_st.phi2.value<=phi2_lim[1])  & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) & ((g_all.metallicity_gaia < -1.5) | (g_all.metallicity_gaia > 10.))
+
+    
+    g_all = g_all[mask]
+    c_all = c_all[mask]
+    c_all_st = c_all_st[mask]
+
     
     
     
@@ -226,7 +233,7 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim):
     
     
     #Create poly del track    
-#     skypath = np.loadtxt('catalogs/pal5_extended_skypath.icrs.txt')
+#     skypath = np.loadtxt('../catalogs/streams/pal5/pal5_extended_skypath.icrs.txt')
 #     skypath_N = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,1]*u.deg, frame='icrs')
 #     skypath_S = ac.SkyCoord(ra=skypath[:,0]*u.deg, dec=skypath[:,2]*u.deg, frame='icrs')
 

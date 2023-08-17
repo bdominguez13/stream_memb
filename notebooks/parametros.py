@@ -42,7 +42,7 @@ def parametros():
     
     # d_inf, d_sup = 18, 25 #Limites en distancia de la corriente
     
-    width = 5. #Ancho del footprint
+    width = 1.5 #Ancho del footprint
 
     #Matriz de covarianza intrinseca del stream (en phi1, phi2)
     C_int = np.diag([0.05, 0.05, 0.2])**2 #HACK, mas/yr, mas/yr, kpc
@@ -106,7 +106,7 @@ def parametros_Fjorm():
     
     do_xd_model = 'no' #Calcular (yes/no) modelo de fondo
     N_lim = (4, 15) #Numero min y (max+1) de gaussianas para el xd
-    i_best_xd = 11 #Mejor numero de gaussians para modelo del fondo
+    N_best_xd = 5 #Mejor numero de gaussians para modelo del fondo
     
     
     width = 8. #Ancho del footprint
@@ -129,5 +129,8 @@ def parametros_Fjorm():
     ra_lim = (180,305) #(180.30401511707694, 306.7764957850894)
     dec_lim = (-70,100) #(-70.8059018281094, 100.4664055090781)
     
+    phi1_lim = (-77.5,77.5)
+    phi2_lim = (-20,7)
     
-    return st, Name, Name_d, do_xd_model, N_lim, i_best_xd, C_int, width, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_lim, d_lim, ra_lim, dec_lim
+    
+    return st, Name, Name_d, do_xd_model, N_lim, N_best_xd, C_int, width, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_lim, d_lim, ra_lim, dec_lim, phi1_lim, phi2_lim

@@ -118,7 +118,8 @@ def parametros_Fjorm():
     lim_unif = [(-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-100, 100), (-75, 75), (-75, 75), (-75, 75), (0, 1)]
 
     #MCMC
-    nwalkers, ndim = 104, 16
+    ndim = 16
+    nwalkers = 8*ndim
     burn_in, steps, thin = 2**11, 2**17, 2200 #50, 2**12, 10 
     
     #quantiles
@@ -129,8 +130,8 @@ def parametros_Fjorm():
     ra_lim = (180,305) #(180.30401511707694, 306.7764957850894)
     dec_lim = (-70,100) #(-70.8059018281094, 100.4664055090781)
     
-    phi1_lim = (-77.5,77.5)
-    phi2_lim = (-20,7)
+    phi1_lim = (-105,105)#(-77.5,77.5)
+    phi2_lim = (-16.5,7.5)#(-20,7)
     
     
     return st, Name, Name_d, do_xd_model, N_lim, N_best_xd, C_int, width, lim_unif, nwalkers, ndim, steps, burn_in, thin, q_lim, d_lim, ra_lim, dec_lim, phi1_lim, phi2_lim

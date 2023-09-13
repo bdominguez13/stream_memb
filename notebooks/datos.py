@@ -130,9 +130,9 @@ def datos_gaiaDR3(st, Name, Name_d, width, C_int, d_lim, ra_lim, dec_lim, phi1_l
     c_all = g_all.get_skycoord(distance=g_all.Dist*u.kpc, radial_velocity = np.zeros(len(g_all.Dist))*u.km/u.s)
     c_all_st = c_all.transform_to(mwsts[st].stream_frame)
     
-    mask = (g_all.ra > ra_lim[0]*u.deg) & (g_all.ra < ra_lim[1]*u.deg) & (g_all.dec > dec_lim[0]*u.deg) & (g_all.dec < dec_lim[1]*u.deg) & skip_mask(g_all.ra, g_all.dec) & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) #& (g_all.dec > (((60+70)*u.deg)/((305-190)*u.deg))*(g_all.ra-305*u.deg)+60*u.deg) & (g_all.b > 10*u.deg) & ((g_all.metallicity_gaia < -1.) | (g_all.metallicity_gaia > 10.))
+    # mask = (g_all.ra > ra_lim[0]*u.deg) & (g_all.ra < ra_lim[1]*u.deg) & (g_all.dec > dec_lim[0]*u.deg) & (g_all.dec < dec_lim[1]*u.deg) & skip_mask(g_all.ra, g_all.dec) & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) #& (g_all.dec > (((60+70)*u.deg)/((305-190)*u.deg))*(g_all.ra-305*u.deg)+60*u.deg) & (g_all.b > 10*u.deg) & ((g_all.metallicity_gaia < -1.) | (g_all.metallicity_gaia > 10.))
 
-    # mask = skip_mask(g_all.ra, g_all.dec) & (c_all_st.phi1.value>=phi1_lim[0]) & (c_all_st.phi1.value<phi1_lim[1]) & (c_all_st.phi2.value>=phi2_lim[0]) & (c_all_st.phi2.value<=phi2_lim[1])  & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) & ((g_all.metallicity_gaia < -1.5) | (g_all.metallicity_gaia > 10.))
+    mask = skip_mask(g_all.ra, g_all.dec) & (c_all_st.phi1.value>=phi1_lim[0]) & (c_all_st.phi1.value<phi1_lim[1]) & (c_all_st.phi2.value>=phi2_lim[0]) & (c_all_st.phi2.value<=phi2_lim[1])  & (g_all.pmra.value!=1e20) & (g_all.pmdec.value != 1e20) & (g_all.pmra.value != 0.) & (g_all.pmdec.value != 0.) & (g_all.Dist > d_lim[0]) & (g_all.Dist < d_lim[1]) #& ((g_all.metallicity_gaia < -1.) | (g_all.metallicity_gaia > 10.))
 
     
     g_all = g_all[mask]
